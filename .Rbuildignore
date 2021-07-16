@@ -1,2 +1,4 @@
 ^gnrProd\.Rproj$
 ^\.Rproj\.user$
+.Rhistory
+*.log
