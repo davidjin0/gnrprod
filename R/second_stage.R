@@ -1,92 +1,135 @@
 
-second_stage <- function(data) {
-  data <- data %>% group_by(id) %>%
-    arrange(time, .by_group = TRUE) %>%
-    mutate(big_Y_1 = dplyr::lag(big_Y, n = 1, default = NA),
-    l_1 = dplyr::lag(l, n = 1, default = NA),
-    k_1 = dplyr::lag(k, n = 1, default = NA),
-    ll_1 = dplyr::lag(ll, n = 1, default = NA),
-    kk_1 = dplyr::lag(kk, n = 1, default = NA),
-    lk_1 = dplyr::lag(lk, n = 1, default = NA),
-    big_Y_2 = dplyr::lag(big_Y_1, n = 1, default = NA),
-    l_2 = dplyr::lag(l_1, n = 1, default = NA),
-    k_2 = dplyr::lag(k_1, n = 1, default = NA),
-    ll_2 = dplyr::lag(ll_1, n = 1, default = NA),
-    kk_2 = dplyr::lag(kk_1, n = 1, default = NA),
-    lk_2 = dplyr::lag(lk_1, n = 1, default = NA))
+second_stage <- function(first_stage, degree, markov_degree, control) {
+  in_df <- data.frame(rbind(first_stage$input, first_stage$input_degree))
+  pred <- in_df[, in_df[nrow(in_df), ] == 0]
+  pred <- pred[-c((nrow(pred) -
+                     (nrow(first_stage$input_degree) - 1)):(nrow(pred))), ]
+  flex <- in_df[, in_df[nrow(in_df), ] != 0]
+  flex <- flex[-c((nrow(flex) -
+                     (nrow(first_stage$input_degree) - 1)):(nrow(flex))), ]
+  id <- data.frame(first_stage$id)
+  time <- data.frame(first_stage$time)
+  big_Y <- data.frame(first_stage$big_Y)
+  errors <- first_stage$errors
 
-  constant_reg <- lm(big_Y ~ l + k + ll + kk + lk, data = data)
+  constant_reg <- stats::lm(as.matrix(big_Y) ~ as.matrix(pred))
+  coefficients <- as.matrix(stats::coef(constant_reg)[2:(ncol(pred) + 1)])
 
-  coefficients <- (as.matrix(coef(constant_reg)))[2:6, ]
+  ss_df <- data.frame(cbind(id, time, pred, big_Y))
+  ss_df <- lag_gnr(ss_df)
 
-  al <- as.numeric(coefficients[1])
-  ak <- as.numeric(coefficients[2])
-  al2 <- as.numeric(coefficients[3])
-  ak2 <- as.numeric(coefficients[4])
-  alk <- as.numeric(coefficients[5])
+  pred_base <- as.matrix(ss_df[[1]])
+  big_Y_base <- pred_base[, ncol(pred_base)]
+  pred_base <- pred_base[, -c(ncol(pred_base))]
 
-  df_gmm <- complete_obs(data, cols = c("big_Y", "l", "k", "big_Y_1", "l_1", "k_1"))
+  pred_lag <- as.matrix(ss_df[[2]])
+  big_Y_lag <- pred_lag[, ncol(pred_lag)]
+  pred_lag <- pred_lag[, -c(ncol(pred_lag))]
 
-  df_gmm <- df_gmm %>% select(
-    big_Y, l, k, ll, kk, lk, big_Y_1, l_1, k_1, ll_1, kk_1, lk_1, id, time
-  )
+  ctrl <- do.call("second_stage_control", control)
+  if (!missing(control)) {
+    control <- as.list(control)
+    ctrl[names(control)] <- control
+  }
 
-  constant_gmm <- gaussNewton(x0 = c(al, ak, al2, ak2, alk), data = df_gmm,
-                              Ffun = constant_moments)
+  constant_gmm <- pracma::gaussNewton(x0 = coefficients, data = pred_base,
+                              Ffun = constant_moments,
+                              big_Y_base = big_Y_base,
+                              big_Y_lag = big_Y_lag,
+                              lag_data = pred_lag,
+                              markov_degree = markov_degree,
+                              maxiter = ctrl$maxit,
+                              tol = ctrl$reltol)
 
-  C_coef = constant_gmm$xs
+  convergence <- ifelse(constant_gmm$niter >= ctrl$maxit, FALSE, TRUE)
+  C_coef <- constant_gmm$xs
 
-  data <- data %>% mutate(
-    logomega = big_Y - (C_coef[1] * l) - (C_coef[2] * k) - (C_coef[3] * ll) -
-      (C_coef[4] * kk) - (C_coef[5] * lk),
-    omega = exp(logomega),
-    prod = exp(logomega + errors),
+  input_degree <- first_stage$input_degree
+  all_input <- first_stage$input
+  gamma <- first_stage$gamma[-1, ]
+  gamma_denom <- first_stage$gamma_denom[-1, ]
 
-    l_elas = (gl * i + 2 * gll * li + glk * ki) + (gli * ii / 2) + (glki * ki * i/2)
-    + C_coef[1] + (2 * C_coef[3] * l) + (C_coef[5] * k),
-    k_elas = (gk * i + 2 * gkk * ki + glk * li) + (gki * ii / 2) + (glki * li * i/2)
-    + C_coef[2] + (2 * C_coef[4] * k) + (C_coef[5] * l)
-  )
+  elasticities <- lapply(1:(nrow(input_degree) - ncol(first_stage$flex_base)),
+                         FUN = function(i) {
+    new_in_deg <- input_degree
+    new_in_deg[i, ] <- ifelse(new_in_deg[i, ] > 0,
+                              new_in_deg[i, ] - 1,
+                              new_in_deg[i, ])
 
-  mean_lelas <- mean(data$l_elas, na.rm = T)
-  mean_kelas <- mean(data$k_elas, na.rm = T)
-  mean_ielas <- mean(data$i_elas, na.rm = T)
-  mean_sum_elas = mean(data$l_elas + data$k_elas + data$i_elas, na.rm = T)
-  mean_l_k_elas = mean_kelas / mean_lelas
+    new_C_deg <- new_in_deg[, new_in_deg[nrow(input_degree), ] == 0]
 
-  point_estimates <- c(mean_lelas, mean_kelas, mean_ielas, mean_sum_elas,
-                       mean_l_k_elas)
-  return(point_estimates)
+    new_in_deg[nrow(new_in_deg), ] <- new_in_deg[nrow(new_in_deg), ] + 1
+
+    in_match <- apply(new_in_deg, MARGIN = 2, FUN = match_gnr, degree_vec =
+                        input_degree)
+    C_match <- apply(new_C_deg, MARGIN = 2, FUN = match_gnr, degree_vec =
+                       input_degree)
+
+    deriv_input <- all_input[, in_match]
+    deriv_input[is.na(deriv_input)] <- 0
+
+    deriv_C <- all_input[, C_match]
+    deriv_C[is.na(deriv_C)] <- 1
+
+    C <- deriv_C %*%
+      t(t(input_degree[i, input_degree[nrow(input_degree), ] == 0]) * C_coef)
+
+    elas <- deriv_input %*% t(t(input_degree[i, ]) * (gamma / gamma_denom)) + C
+  })
+
+  logomega <- big_Y - (as.matrix(pred) %*% C_coef)
+  omega <- exp(logomega)
+  productivity <- as.matrix(exp(logomega + errors))
+
+  ss_return <- list(productivity, markov_degree, constant_gmm$niter, ctrl$maxit,
+                    ctrl$reltol, convergence)
+  names(ss_return) <- c("productivity", "markov_degree", "iterations", "maxit",
+                        "reltol", "convergence")
+
+  average_elas <- lapply(elasticities, FUN = mean)
+  elasticities <- do.call(cbind, elasticities)
+  return_list <- list(elasticities, ss_return)
+  return(return_list)
 }
 
-complete_obs <- function(data, cols) {
-  complete_vectors <- complete.cases(data[, cols])
-  return(data[complete_vectors, ])
+constant_moments <- function(C_kl, data, big_Y_base, big_Y_lag, lag_data,
+                             markov_degree) {
+  w = big_Y_base - (data %*% C_kl)
+  w_1 = big_Y_lag - (lag_data %*% C_kl)
+
+  poly = sapply(2:markov_degree, FUN = function(i) {
+    `^`(w_1, i)
+  })
+
+  markov = cbind(w_1, poly)
+
+  reg <- stats::lm(w ~ markov)
+  csi <- w - reg$fitted.values
+
+  moments <- apply(data, MARGIN = 2, FUN = function(i) {
+    sum(i * csi) / length(i)
+  })
+
+  return(moments)
 }
 
-constant_moments <- function(C_kl, data) {
-  data <- data %>% mutate(
-    w = big_Y - {C_kl[1] * l} - {C_kl[2] * k} - {C_kl[3] * ll} - {C_kl[4] * kk} - {C_kl[5] * lk},
-    w_1 = big_Y_1 - {C_kl[1] * l_1} - {C_kl[2] * k_1} - {C_kl[3] * ll_1} - {C_kl[4] * kk_1} - {C_kl[5] * lk_1},
-    w2_1 = w_1 * w_1,
-    w3_1 = w_1 * w_1 * w_1
-  )
-
-  reg <- stats::lm(w ~ w_1 + w2_1 + w3_1, data)
-  data$csi <- data$w - predict(reg, data)
-
-  m1 <- sum(data$l * data$csi) / nrow(data)
-  m2 <- sum(data$k * data$csi) / nrow(data)
-  m3 <- sum(data$ll * data$csi) / nrow(data)
-  m4 <- sum(data$kk * data$csi) / nrow(data)
-  m5 <- sum(data$lk * data$csi) / nrow(data)
-
-  M <- c(m1, m2, m3, m4, m5)
-  return(M)
+match_gnr <- function(i, degree_vec) {
+  match_test <- apply(i == degree_vec, MARGIN = 2, FUN = prod)
+  col_index <- ifelse(length(which(match_test == 1)) != 0,
+                      which(match_test == 1), NA)
 }
 
+second_stage_control <- function(maxit = 100, reltol = 1e-8) {
+  if (maxit <= 0 || !is.numeric(maxit)) {
+    stop("maximum iteration count must be integer > 0")
+  }
 
+  if (reltol <= 0 || !is.numeric(reltol)) {
+    stop("relative tolerance must be numeric > 0")
+  }
 
+  list(maxit = maxit, reltol = reltol)
+}
 
 
 

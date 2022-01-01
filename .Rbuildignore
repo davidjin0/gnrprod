@@ -1,4 +1,2 @@
-^gnrProd\.Rproj$
+^.*\.Rproj$
 ^\.Rproj\.user$
-.Rhistory
-*.log
