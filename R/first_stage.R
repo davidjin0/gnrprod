@@ -41,19 +41,11 @@ first_stage <- function(output, input, share, id, time, fs_control,
                               "gamma" = gamma,
                               "gamma_denom" = gamma_denom)
 
-  first_stage_return <- list("flexible_inputs" = input$flex_in,
-                             "flexible_input_elasticity" = i_elas,
-                             "polynomial_degree" = degree,
-                             "coef" = coef,
+  first_stage_return <- list("coef" = coef,
                              "residuals" = errors,
                              "SSR" = share_reg$SSR,
                              "iterations" = share_reg$iterations,
-                             "maxit" = share_reg$maxit,
-                             "reltol" = share_reg$reltol,
-                             "intial_step" = share_reg$initial_step,
-                             "min_factor" = share_reg$min_factor,
-                             "convergence" = share_reg$convergence
-                              )
+                             "convergence" = share_reg$convergence)
   return(list(first_stage_results, first_stage_return))
 }
 
@@ -109,21 +101,16 @@ gauss_newton_reg <- function(start, data, share, control) {
 
     iter = iter + 1
     if (conv_bool) {
-      return_list <- list(new_start, iter, new_SSR, ctrl$maxit, ctrl$reltol,
-                          conv_bool, ctrl$initial_step, ctrl$min_factor)
-      names(return_list) <- c("share_reg_coef", "iterations", "SSR", "maxit",
-                              "reltol", "convergence", "initial_step",
-                              "min_factor")
+      return_list <- list(new_start, iter, new_SSR, conv_bool)
+      names(return_list) <- c("share_reg_coef", "iterations", "SSR",
+                              "convergence")
       return(return_list)
     }
     call_start = new_start
   }
   warning("share regression failed to converge")
-  return_list <- list(new_start, iter, new_SSR, ctrl$maxit, ctrl$reltol,
-                      conv_bool, ctrl$initial_step, ctrl$min_factor)
-  names(return_list) <- c("share_reg_coef", "iterations", "SSR", "maxit",
-                          "reltol", "convergence", "initial_step",
-                          "min_factor")
+  return_list <- list(new_start, iter, new_SSR, conv_bool)
+  names(return_list) <- c("share_reg_coef", "iterations", "SSR", "convergence")
   return(return_list)
 }
 

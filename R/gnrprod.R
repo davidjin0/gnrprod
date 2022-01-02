@@ -3,7 +3,7 @@
 #' @param output name (character) of variable of level gross output or a numeric vector/dataframe/matrix
 #' @param fixed name (character or character vector) of variables of level fixed inputs or a numeric vector/dataframe/matrix
 #' @param flex name (character) of variable of level flexible input or a numeric vector/dataframe/matrix
-#' @param share name (character) of variable of level flexible input's revenue share or a numeric vector/dataframe/matrix
+#' @param share name (character) of variable of level intermediate input's revenue share or a numeric vector/dataframe/matrix
 #' @param in_price optional name (character) of variable of common flexible input price or a numeric vector/dataframe/matrix
 #' @param out_price optional name (character) of variable of common output price or a numeric vector/dataframe/matrix
 #' @param id name (character) of variable of firm id or a numeric vector/dataframe/matrix
@@ -14,23 +14,34 @@
 #' @param firstStageOnly boolean for whether return is only first stage results
 #' @param fs_control list of convergence parameters for first stage
 #' @param ss_control list of convergence parameters for second stage
+#' @return a list of class "gnr" with five elements:
+#' \code{avg_elasticity}: a named numeric vector of the average elasticities of all inputs
+#'
+#' \code{data}: a list (data frame) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, and \code{share} variables and individual estimated elasticities
+#'
+#' \code{first_stage}: a list containing six elements describing the share regression (first stage):
+#' \itemize{
+#'  \item{\code{coef}}{: a numeric vector of the coefficients}
+#'  \item{\code{residuals}}{: a numeric vector of the residuals}
+#'  \item{\code{SSR}}{: sum of squared residual}
+#'  \item{\code{iterations}}{: number of iterations performed}
+#'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved}
+#'  \item{\code{control}}{: a list containing information on algorithm convergence (Gauss-Newton)}
+#' }
+#'
+#' \code{second_stage}: a list containing four elements describing the second stage:
+#' \itemize{
+#'  \item{\code{productivity}}{: a numeric vector of the total productivity of each observations}
+#'  \item{\code{iterations}}{: number of iterations performed}
+#'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved}
+#'  \item{\code{control}}{: a list containing information on algorithm convergence (Gauss-Newton)}
+#' }
 #' @export
 
-gnrprod <- function(output,
-                    fixed,
-                    flex,
-                    share,
-                    in_price = NULL,
-                    out_price = NULL,
-                    id,
-                    time,
-                    data,
-                    degree = 2,
-                    markov_degree = 2,
-                    firstStageOnly = FALSE,
-                    fs_control = list(),
-                    ss_control = list()
-                    ) {
+gnrprod <- function(output, fixed, flex, share, in_price = NULL,
+                    out_price = NULL, id, time, data, degree = 2,
+                    markov_degree = 2, firstStageOnly = FALSE,
+                    fs_control = list(), ss_control = list()) {
 
   cl <- match.call()
   if (is.character(output)) {
@@ -110,7 +121,7 @@ gnrprod <- function(output,
       out_pricem <- as.matrix(out_price)
     }
 
-    sharem = as.matrix(log(in_price * flex_input / out_price * y))
+    sharem = as.matrix(log((in_price * flex_input) / (out_price * y)))
     share_name = "share"
   } else {
     stop("must specify either share or intermediate-input price and output price")
@@ -160,18 +171,20 @@ gnrprod <- function(output,
   pred_elas <- second_stage_list[[1]]
   flex_elas <- fs_results$flex_in_elasticity
 
-  elas <- cbind(pred_elas, flex_elas)
+  elas <- data.frame(cbind(pred_elas, flex_elas))
   input_names <- c(fixed_name, flex_name)
   input_names <- paste(input_names, "elasticity", sep = "_")
   colnames(elas) <- input_names
 
-  return_df <- cbind(y, fixed_input, flex_input, idm, timem, sharem, elas)
+  return_df <- data.frame(cbind(y, fixed_input, flex_input, idm, timem, sharem))
   colnames(return_df) <- c(output_name, fixed_name, flex_name, id_name,
-                           time_name, share_name, input_names)
+                           time_name, share_name)
+
+  point_estimates <- list("estimates" = elas, "data" = return_df)
 
   return_average_elas <- apply(elas, MARGIN = 2, FUN = mean)
   names(return_average_elas) <- paste(input_names, "avg", sep = "_")
-  gnr_out <- list(return_average_elas, return_df, fs_return, ss_return, cl)
+  gnr_out <- list(return_average_elas, point_estimates, fs_return, ss_return, cl)
   names(gnr_out) <- c("avg_elasticity", "point_estimates", "first_stage",
                           "second_stage", "call")
   class(gnr_out) <- "gnr"

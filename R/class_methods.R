@@ -1,4 +1,4 @@
-extract.gnr <- function(object) object$point_estimates
+coef.gnr <- function(object) object$avg_elasticity
 
 print.gnr <- function(object, digits = max(3L, getOption("digits") - 3L)) {
   cat("Call:\n")

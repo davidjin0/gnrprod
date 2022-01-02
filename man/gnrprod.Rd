@@ -28,7 +28,7 @@ gnrprod(
 
 \item{flex}{name (character) of variable of level flexible input or a numeric vector/dataframe/matrix}
 
-\item{share}{name (character) of variable of level flexible input's revenue share or a numeric vector/dataframe/matrix}
+\item{share}{name (character) of variable of level intermediate input's revenue share or a numeric vector/dataframe/matrix}
 
 \item{in_price}{optional name (character) of variable of common flexible input price or a numeric vector/dataframe/matrix}
 
@@ -49,6 +49,30 @@ gnrprod(
 \item{fs_control}{list of convergence parameters for first stage}
 
 \item{ss_control}{list of convergence parameters for second stage}
+}
+\value{
+a list of class "gnr" with five elements:
+\code{avg_elasticity}: a named numeric vector of the average elasticities of all inputs
+
+\code{data}: a list (data frame) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, and \code{share} variables and individual estimated elasticities
+
+\code{first_stage}: a list containing six elements describing the share regression (first stage):
+\itemize{
+\item{\code{coef}}{: a numeric vector of the coefficients}
+\item{\code{residuals}}{: a numeric vector of the residuals}
+\item{\code{SSR}}{: sum of squared residual}
+\item{\code{iterations}}{: number of iterations performed}
+\item{\code{convergence}}{: boolean indicating whether convergence was achieved}
+\item{\code{control}}{: a list containing information on algorithm convergence (Gauss-Newton)}
+}
+
+\code{second_stage}: a list containing four elements describing the second stage:
+\itemize{
+\item{\code{productivity}}{: a numeric vector of the total productivity of each observations}
+\item{\code{iterations}}{: number of iterations performed}
+\item{\code{convergence}}{: boolean indicating whether convergence was achieved}
+\item{\code{control}}{: a list containing information on algorithm convergence (Gauss-Newton)}
+}
 }
 \description{
 Estimate the nonparametric model in two stages: the share regression and instrumental variable estimation
