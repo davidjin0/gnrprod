@@ -1,47 +1,53 @@
-#' Estimate the nonparametric model in two stages: the share regression and instrumental variable estimation
+#' Estimate production functions and productivity: Gandhi, Navarro, and Rivers (2020)
 #'
-#' @param output name (character) of variable of level gross output or a numeric vector/dataframe/matrix
-#' @param fixed name (character or character vector) of variables of level fixed inputs or a numeric vector/dataframe/matrix
-#' @param flex name (character) of variable of level flexible input or a numeric vector/dataframe/matrix
-#' @param share name (character) of variable of level intermediate input's revenue share or a numeric vector/dataframe/matrix
-#' @param in_price optional name (character) of variable of common flexible input price or a numeric vector/dataframe/matrix
-#' @param out_price optional name (character) of variable of common output price or a numeric vector/dataframe/matrix
-#' @param id name (character) of variable of firm id or a numeric vector/dataframe/matrix
-#' @param time name (character) of variable of time or a numeric vector/dataframe/matrix
-#' @param data dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/dataframe/matrix)
+#' @description The \code{gnrprod} function is the front end of the \code{gnrprod} package. It estimates production functions and productivity in two stages: \code{gnrflex} (estimate flexible input elasticity) and \code{gnriv} (estimate fixed input elasticities and productivity). It currently supports only one flexible input.
+#'
+#' @param output name (character) of variable of level gross output or a numeric vector
+#' @param fixed name (character or character vector) of variables of level fixed inputs or a numeric matrix
+#' @param flex name (character) of variable of level flexible input or a numeric vector
+#' @param share name (character) of variable of level intermediate input's revenue share or a numeric vector
+#' @param in_price optional (required if \code{share} is not specified) name (character) of variable of common flexible input price or a numeric vector
+#' @param out_price optional (required if \code{share} is not specified) name (character) of variable of common output price or a numeric vector
+#' @param id name (character) of variable of firm id or a numeric vector
+#' @param time name (character) of variable of time or a numeric vector
+#' @param data dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix)
 #' @param degree degree of share regression polynomial
-#' @param markov_degree degree of Markovian process for persistent productivity
-#' @param firstStageOnly boolean for whether return is only first stage results
-#' @param fs_control list of convergence parameters for first stage
-#' @param ss_control list of convergence parameters for second stage
+#' @param markov_degree degree of Markov process for persistent productivity
+#' @param fs_control an optional list of convergence settings of the first stage. See \code{gnrflex.control} for listing.
+#' @param ss_control an optional list of convergence settings of the second stage. See \code{gnriv.control} for listing.
 #' @return a list of class "gnr" with five elements:
 #' \code{avg_elasticity}: a named numeric vector of the average elasticities of all inputs
 #'
-#' \code{data}: a list (data frame) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, and \code{share} variables and individual estimated elasticities
+#' \code{data}: a list (dataframe) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, and \code{share} variables and estimated elasticities for each observation
 #'
 #' \code{first_stage}: a list containing six elements describing the share regression (first stage):
 #' \itemize{
-#'  \item{\code{coef}}{: a numeric vector of the coefficients}
+#'  \item{\code{coef}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21))}
 #'  \item{\code{residuals}}{: a numeric vector of the residuals}
 #'  \item{\code{SSR}}{: sum of squared residual}
 #'  \item{\code{iterations}}{: number of iterations performed}
 #'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved}
-#'  \item{\code{control}}{: a list containing information on algorithm convergence (Gauss-Newton)}
+#'  \item{\code{control}}{: list of convergence control parameters (see \code{gnrflex.control})}
 #' }
 #'
 #' \code{second_stage}: a list containing four elements describing the second stage:
 #' \itemize{
-#'  \item{\code{productivity}}{: a numeric vector of the total productivity of each observations}
+#'  \item{\code{productivity}}{: a numeric vector of the estimated total productivity}
 #'  \item{\code{iterations}}{: number of iterations performed}
 #'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved}
-#'  \item{\code{control}}{: a list containing information on algorithm convergence (Gauss-Newton)}
+#'  \item{\code{control}}{: list of convergence control parameters (see \code{gnriv.control})}
 #' }
+#'
+#' @usage gnrprod(output, fixed, flex, share, in_price = NULL,
+#'                out_price = NULL, id, time, data, degree = 2,
+#'                markov_degree = 2, fs_control = gnrflex.control(),
+#'                ss_control = gnriv.control())
 #' @export
 
 gnrprod <- function(output, fixed, flex, share, in_price = NULL,
                     out_price = NULL, id, time, data, degree = 2,
-                    markov_degree = 2, firstStageOnly = FALSE,
-                    fs_control = list(), ss_control = list()) {
+                    markov_degree = 2, fs_control = gnrflex.control(),
+                    ss_control = gnriv.control()) {
 
   cl <- match.call()
   if (is.character(output)) {
@@ -136,57 +142,46 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
   timem <- timem[complete_obs]
   sharem <- sharem[complete_obs]
 
-  all_input = as.matrix(cbind(fixed_input, flex_input))
-  poly_input = as.matrix(stats::poly(all_input, degree = degree, raw = TRUE))
+  gnr_flex <- gnrflex(output = y,
+                      fixed = fixed_input,
+                      flex = flex_input,
+                      share = sharem,
+                      id = idm,
+                      time = timem,
+                      degree = degree,
+                      control = fs_control)
 
-  input_degrees <- sapply(colnames(poly_input), FUN = function(x) {
-    a <- data.frame(base::strsplit(x, split = "[.]")[[1]])
-  })
-  input_degrees <- do.call(cbind, input_degrees)
+  gnr_iv <- gnriv(object = gnr_flex, degree = markov_degree,
+                  control = ss_control)
 
-  inputs = list("poly_input" = poly_input,
-                "input_degrees" = input_degrees,
-                "flex_in" = flex_input)
-
-  first_stage_list <- first_stage(output = y,
-                                input = inputs,
-                                share = sharem,
-                                id = idm,
-                                time = timem,
-                                fs_control = fs_control,
-                                degree = degree)
-
-  fs_results <- first_stage_list[[1]]
-  fs_return <- first_stage_list[[2]]
-
-  if (firstStageOnly) {
-    return(fs_return)
-  }
-
-  second_stage_list <- second_stage(first_stage = fs_results, degree = degree,
-                                    markov_degree = markov_degree,
-                                    control = ss_control)
-
-  ss_return <- second_stage_list[[2]]
-  pred_elas <- second_stage_list[[1]]
-  flex_elas <- fs_results$flex_in_elasticity
-
+  pred_elas <- gnr_iv$elas
+  flex_elas <- gnr_flex$elas$flex_in_elas
   elas <- data.frame(cbind(pred_elas, flex_elas))
   input_names <- c(fixed_name, flex_name)
   input_names <- paste(input_names, "elasticity", sep = "_")
   colnames(elas) <- input_names
-
   return_df <- data.frame(cbind(y, fixed_input, flex_input, idm, timem, sharem))
   colnames(return_df) <- c(output_name, fixed_name, flex_name, id_name,
                            time_name, share_name)
+  return_df <- cbind(return_df, elas)
 
-  point_estimates <- list("estimates" = elas, "data" = return_df)
+  fs_return <- list("coefficients" = gnr_flex$elas$coef,
+                    "residuals" = gnr_flex$elas$residuals,
+                    "SSR" = gnr_flex$elas$SSR,
+                    "iterations" = gnr_flex$elas$iterations,
+                    "convergence" = gnr_flex$elas$convergence,
+                    "control" = gnr_flex$control)
+
+  ss_return <- list("productivity" = gnr_iv$productivity,
+                    "iterations" = gnr_iv$iterations,
+                    "convergence" = gnr_iv$convergence,
+                    "control" = gnr_iv$control)
 
   return_average_elas <- apply(elas, MARGIN = 2, FUN = mean)
   names(return_average_elas) <- paste(input_names, "avg", sep = "_")
-  gnr_out <- list(return_average_elas, point_estimates, fs_return, ss_return, cl)
-  names(gnr_out) <- c("avg_elasticity", "point_estimates", "first_stage",
-                          "second_stage", "call")
+  gnr_out <- list(return_average_elas, return_df, fs_return, ss_return, cl)
+  names(gnr_out) <- c("avg_elasticity", "data", "first_stage", "second_stage",
+                      "call")
   class(gnr_out) <- "gnr"
   return(gnr_out)
 }

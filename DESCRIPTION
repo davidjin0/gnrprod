@@ -1,5 +1,5 @@
 Package: gnrprod
-Title: What the Package Does (One Line, Title Case)
+Title: Estimates Production Functions
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "First",
@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "first.last@example.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: Implements the nonparametric identification of gross output production functions specified by Gandhi, Navarro, and Rivers (2020).
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

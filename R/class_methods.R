@@ -15,4 +15,3 @@ print.gnr <- function(object, digits = max(3L, getOption("digits") - 3L)) {
   cat("First stage sum of squared residuals: ", object$first_stage$SSR)
   invisible(object)
 }
-

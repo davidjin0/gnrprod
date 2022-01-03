@@ -3,6 +3,7 @@
 #' Plant-level production data for the food products industry (International Standard Industrial Classification code 311) in Colombia.
 #'
 #' @format A data frame with seven variables:
+#'
 #' \describe{
 #' \item{\code{share}}{level intermediate input's revenue share}
 #' \item{\code{id}}{firm id}

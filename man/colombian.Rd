@@ -6,6 +6,7 @@
 \title{Colombian}
 \format{
 A data frame with seven variables:
+
 \describe{
 \item{\code{share}}{level intermediate input's revenue share}
 \item{\code{id}}{firm id}
