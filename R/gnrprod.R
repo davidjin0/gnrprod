@@ -42,6 +42,13 @@
 #'                out_price = NULL, id, time, data, degree = 2,
 #'                markov_degree = 2, fs_control = gnrflex.control(),
 #'                ss_control = gnriv.control())
+#' 
+#' @examples
+#' require(gnrprod)
+#' data <- colombian
+#' industry_311 <- gnrprod(output = "RGO", fixed = c("L", "K"), flex = "RI",
+#'                         share = "share", id = "id", time = "year",
+#'                         data = data, degree = 3, markov_degree = 3)
 #' @export
 
 gnrprod <- function(output, fixed, flex, share, in_price = NULL,
