@@ -2,18 +2,18 @@
 #'
 #' @description The \code{gnrprod} function is the front end of the \code{gnrprod} package. It estimates production functions and productivity in two stages: \code{gnrflex} (estimate flexible input elasticity) and \code{gnriv} (estimate fixed input elasticities and productivity). It currently supports only one flexible input.
 #'
-#' @param output name (character) of variable of level gross output or a numeric vector
-#' @param fixed name (character or character vector) of variables of level fixed inputs or a numeric matrix
-#' @param flex name (character) of variable of level flexible input or a numeric vector
-#' @param share name (character) of variable of level intermediate input's revenue share or a numeric vector
-#' @param in_price optional (required if \code{share} is not specified) name (character) of variable of common flexible input price or a numeric vector
-#' @param out_price optional (required if \code{share} is not specified) name (character) of variable of common output price or a numeric vector
-#' @param id name (character) of variable of firm id or a numeric vector
-#' @param time name (character) of variable of time or a numeric vector
-#' @param data dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix)
-#' @param degree degree of share regression polynomial
-#' @param markov_degree degree of Markov process for persistent productivity
-#' @param B number of bootstrap draws
+#' @param output name (character) of variable of log gross output or a numeric vector.
+#' @param fixed name (character or character vector) of variables of log fixed inputs or a numeric matrix.
+#' @param flex name (character) of variable of log flexible input or a numeric vector.
+#' @param share name (character) of variable of log intermediate input's revenue share or a numeric vector.
+#' @param in_price optional (required if \code{share} is not specified) name (character) of variable of common flexible input price or a numeric vector.
+#' @param out_price optional (required if \code{share} is not specified) name (character) of variable of common output price or a numeric vector.
+#' @param id name (character) of variable of firm id or a numeric vector.
+#' @param time name (character) of variable of time or a numeric vector.
+#' @param data dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix).
+#' @param degree degree of share regression polynomial. Defaults to 2.
+#' @param markov_degree degree of Markov process for persistent productivity. Defaults to 2.
+#' @param B number of bootstrap repetitions to retrieve standard errors of elasticity estimates. By default, \code{gnrprod} does not bootstrap, i.e., \code{B = NULL}.
 #' @param fs_control an optional list of convergence settings of the first stage. See \code{gnrflex.control} for listing.
 #' @param ss_control an optional list of convergence settings of the second stage. See \code{gnriv.control} for listing.
 #' @param ... additional optional arguments to be passed to optim in the second stage.
@@ -38,10 +38,13 @@
 #'  \item{\code{optim_control}}{: the list of control parameters passed to optim. See optim.}
 #'  \item{\code{degree}}{: degree of Markov process for persistent productivity}
 #' }
+#' 
+#' \code{call}: the function call
 #'
 #' @usage gnrprod(output, fixed, flex, share, in_price = NULL,
 #'                out_price = NULL, id, time, data, degree = 2,
-#'                markov_degree = 2, B = NULL, fs_control = gnrflex.control(),
+#'                markov_degree = 2, B = NULL,
+#'                fs_control = gnrflex.control(),
 #'                ss_control = gnriv.control(), ...)
 #' 
 #' @examples
@@ -49,8 +52,10 @@
 #' data <- colombian
 #' industry_311 <- gnrprod(output = "RGO", fixed = c("L", "K"),
 #'                         flex = "RI", share = "share", id = "id",
-#'                         time = "year", data = data,
-#'                         degree = 3, markov_degree = 3, B = 10)
+#'                         time = "year", data = data, degree = 3,
+#'                         markov_degree = 3, B = 10)
+#'                         
+#' @references Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." *Journal of Political Economy*, 128(8): 2973-3016. https://doi.org/10.1086/707736.
 #' @export
 
 gnrprod <- function(output, fixed, flex, share, in_price = NULL,

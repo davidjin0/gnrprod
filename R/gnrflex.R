@@ -3,40 +3,43 @@
 #'
 #' For details, see Gandhi, Navarro, and Rivers (2020).
 #'
-#' @param output a numeric vector of level gross output
-#' @param fixed a numeric matrix of level fixed inputs
-#' @param flex a numeric vector of level flexible input
-#' @param share a numeric vector of the level intermediate input's revenue share
-#' @param id a numeric vector of firm ids
-#' @param time a numeric vector of time
-#' @param degree degree of share regression polynomial
+#' @param output a numeric vector of log gross output.
+#' @param fixed a numeric matrix of log fixed inputs.
+#' @param flex a numeric vector of log flexible input.
+#' @param share a numeric vector of the log intermediate input's revenue share.
+#' @param id a numeric vector of firm ids.
+#' @param time a numeric vector of time.
+#' @param degree degree of share regression polynomial. Defaults to 2.
 #' @param control an optional list of convergence settings. See \code{gnrflex.control} for listing.
 #' @return a list of class "gnrflex" containing three elements:
 #'
 #' \code{elas}: a list containing six elements describing the share regression:
 #'
 #' \itemize{
-#'  \item{\code{flex_in_elas}}{: a numeric vector of the estimated flexible input elasticity for each observation}
-#'  \item{\code{coef}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21))}
-#'  \item{\code{residuals}}{: a numeric vector of the residuals}
-#'  \item{\code{SSR}}{: sum of squared residuals}
-#'  \item{\code{iterations}}{: number of iterations performed}
-#'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved}
+#'  \item{\code{flex_elas}}{: a numeric vector of the estimated flexible input elasticity for each observation.}
+#'  \item{\code{coef}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21)).}
+#'  \item{\code{residuals}}{: a numeric vector of the residuals.}
+#'  \item{\code{SSR}}{: sum of squared residuals.}
+#'  \item{\code{iterations}}{: number of iterations performed.}
+#'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved.}
 #' }
 #'
-#' \code{arg}: a list containing seven elements to be passed to the second stage function \code{gnriv}
+#' \code{arg}: a list containing seven elements to be passed to the second stage function \code{gnriv}:
 #' \itemize{
-#'  \item{\code{input}}{: a numeric matrix (S3 'poly') of the polynomial expansion of all inputs}
-#'  \item{\code{input_degree}}{: a numeric matrix corresponding to \code{input} denoting each vector's degree}
-#'  \item{\code{big_Y}}{: a numeric vector of persistent productivity minus the constant of integration (equation (16) in Gandhi, Navarro, and Rivers (2020))}
-#'  \item{\code{D_coef}}{: a numeric vector equalling \code{coef} divided by an estimate of the constant}
-#'  \item{\code{id}}{: a numeric vector of the firm ids}
-#'  \item{\code{time}}{: a numeric vector of time}
-#'  \item{\code{degree}}{: the degree of the share regression}
+#'  \item{\code{input}}{: a numeric matrix (S3 'poly') of the polynomial expansion of all inputs.}
+#'  \item{\code{input_degree}}{: a numeric matrix corresponding to \code{input} denoting each vector's degree.}
+#'  \item{\code{big_Y}}{: a numeric vector of persistent productivity minus the constant of integration (equation (16) in Gandhi, Navarro, and Rivers (2020)).}
+#'  \item{\code{D_coef}}{: a numeric vector equaling \code{coef} divided by an estimate of the constant.}
+#'  \item{\code{id}}{: a numeric vector of the firm ids.}
+#'  \item{\code{time}}{: a numeric vector of time.}
+#'  \item{\code{degree}}{: the degree of the share regression.}
 #' }
 #'
-#' \code{control}: the list of convergence control parameters. See \code{gnrflex.control}
-#'
+#' \code{control}: the list of convergence control parameters. See \code{gnrflex.control}.
+#' 
+#' @usage gnrflex(output, fixed, flex, share, id, time, degree = 2,
+#'                control = gnrflex.control())
+#' 
 #' @export
 
 gnrflex <- function(output, fixed, flex, share, id, time, degree = 2,

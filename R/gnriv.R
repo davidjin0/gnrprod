@@ -3,28 +3,30 @@
 #'
 #' For details, see Gandhi, Navarro, and Rivers (2020).
 #'
-#' @param object object of class \code{gnrflex}
-#' @param degree degree of Markov process for persistent productivity
+#' @param object object of class \code{gnrflex}.
+#' @param degree degree of Markov process for persistent productivity. Defaults to 2.
 #' @param control an optional list of convergence settings. See \code{gnriv.control} for listing.
-#' @param ... additional optional arguments passed to optim
+#' @param ... additional optional arguments passed to optim.
 #' @return a list of class "gnriv" containing six elements:
 #'
-#' \code{elas}: a numeric matrix of estimated elasticities of fixed inputs for each observation
+#' \code{pred_elas}: a numeric matrix of estimated elasticities of fixed inputs for each observation.
 #'
-#' \code{productivity}: a numeric vector of estimated total productivity
+#' \code{productivity}: a numeric vector of estimated total productivity.
 #'
-#' \code{degree}: degree of Markov process
+#' \code{degree}: degree of Markov process.
 #'
-#' \code{iterations}: number of iterations performed
+#' \code{iterations}: number of iterations performed.
 #'
-#' \code{convergence}: boolean indicating whether convergence was achieved
+#' \code{convergence}: boolean indicating whether convergence was achieved.
 #'
 #' \code{control}: the list of convergence control parameters. See \code{gnriv.control}.
-#'
+#' 
+#' @usage gnriv(object, degree = 2, control, ...)
+#' 
 #' @export
 
 
-gnriv <- function(object, degree, control, ...) {
+gnriv <- function(object, degree = 2, control, ...) {
   if (attr(object, "class") != "gnrflex") {
     stop("object must be of class gnrflex")
   }
