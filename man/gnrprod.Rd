@@ -6,8 +6,8 @@
 \usage{
 gnrprod(output, fixed, flex, share, in_price = NULL,
                out_price = NULL, id, time, data, degree = 2,
-               markov_degree = 2, fs_control = gnrflex.control(),
-               ss_control = gnriv.control())
+               markov_degree = 2, B = NULL, fs_control = gnrflex.control(),
+               ss_control = gnriv.control(), ...)
 }
 \arguments{
 \item{output}{name (character) of variable of level gross output or a numeric vector}
@@ -32,20 +32,23 @@ gnrprod(output, fixed, flex, share, in_price = NULL,
 
 \item{markov_degree}{degree of Markov process for persistent productivity}
 
+\item{B}{number of bootstrap draws}
+
 \item{fs_control}{an optional list of convergence settings of the first stage. See \code{gnrflex.control} for listing.}
 
 \item{ss_control}{an optional list of convergence settings of the second stage. See \code{gnriv.control} for listing.}
+
+\item{...}{additional optional arguments to be passed to optim in the second stage.}
 }
 \value{
 a list of class "gnr" with five elements:
-\code{avg_elasticity}: a named numeric vector of the average elasticities of all inputs
+\code{estimates}: a list with two elements: \code{elas} are the parameter estimates and \code{std_errors} the standard errors
 
-\code{data}: a list (dataframe) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, and \code{share} variables and estimated elasticities for each observation
+\code{data}: a list (dataframe) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, \code{share}, estimated elasticities for each observation, estimated productivity, and first stage residuals
 
-\code{first_stage}: a list containing six elements describing the share regression (first stage):
+\code{first_stage}: a list containing five elements describing the share regression (first stage):
 \itemize{
 \item{\code{coef}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21))}
-\item{\code{residuals}}{: a numeric vector of the residuals}
 \item{\code{SSR}}{: sum of squared residual}
 \item{\code{iterations}}{: number of iterations performed}
 \item{\code{convergence}}{: boolean indicating whether convergence was achieved}
@@ -54,10 +57,10 @@ a list of class "gnr" with five elements:
 
 \code{second_stage}: a list containing four elements describing the second stage:
 \itemize{
-\item{\code{productivity}}{: a numeric vector of the estimated total productivity}
-\item{\code{iterations}}{: number of iterations performed}
-\item{\code{convergence}}{: boolean indicating whether convergence was achieved}
-\item{\code{control}}{: list of convergence control parameters (see \code{gnriv.control})}
+\item{\code{optim_method}}{: the method for optimization. Defaults to 'Nelder-Mead'.}
+\item{\code{optim_info}}{: the returned list of optim. See optim.}
+\item{\code{optim_control}}{: the list of control parameters passed to optim. See optim.}
+\item{\code{degree}}{: degree of Markov process for persistent productivity}
 }
 }
 \description{
@@ -66,7 +69,8 @@ The \code{gnrprod} function is the front end of the \code{gnrprod} package. It e
 \examples{
 require(gnrprod)
 data <- colombian
-industry_311 <- gnrprod(output = "RGO", fixed = c("L", "K"), flex = "RI",
-                        share = "share", id = "id", time = "year",
-                        data = data, degree = 3, markov_degree = 3)
+industry_311 <- gnrprod(output = "RGO", fixed = c("L", "K"),
+                        flex = "RI", share = "share", id = "id",
+                        time = "year", data = data,
+                        degree = 3, markov_degree = 3, B = 10)
 }

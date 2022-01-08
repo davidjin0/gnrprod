@@ -4,7 +4,16 @@
 \alias{gnrflex}
 \title{Estimate flexible input elasticity: Gandhi, Navarro, Rivers (GNR) share regression}
 \usage{
-gnrflex(output, fixed, flex, share, id, time, degree, control)
+gnrflex(
+  output,
+  fixed,
+  flex,
+  share,
+  id,
+  time,
+  degree = 2,
+  control = gnrflex.control()
+)
 }
 \arguments{
 \item{output}{a numeric vector of level gross output}

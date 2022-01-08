@@ -60,10 +60,9 @@ gnrflex <- function(output, fixed, flex, share, id, time, degree = 2,
   start_reg <- stats::lm(share ~ poly_input)
 
   constant <- start_reg$fitted.values - stats::coef(start_reg)[1]
-  constant <- -min(constant, na.rm = T) + 0.1
+  constant <- -min(constant, na.rm = TRUE) + 0.1
 
   start <- c(constant, (coef(start_reg)[-1]))
-
   share_reg <- gauss_newton_reg(start = start, data = poly_input,
                                 share = share, control = control)
 
@@ -168,8 +167,6 @@ pred_fs <- function(start, data) {
   new_m <- matrix %*% start
   return(new_m)
 }
-
-
 
 
 

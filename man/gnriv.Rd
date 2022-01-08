@@ -4,7 +4,7 @@
 \alias{gnriv}
 \title{Estimate fixed input elasticity and total productivity: Gandhi, Navarro, Rivers (GNR) lag instruments}
 \usage{
-gnriv(object, degree, control)
+gnriv(object, degree, control, ...)
 }
 \arguments{
 \item{object}{object of class \code{gnrflex}}
@@ -12,6 +12,8 @@ gnriv(object, degree, control)
 \item{degree}{degree of Markov process for persistent productivity}
 
 \item{control}{an optional list of convergence settings. See \code{gnriv.control} for listing.}
+
+\item{...}{additional optional arguments passed to optim}
 }
 \value{
 a list of class "gnriv" containing six elements:

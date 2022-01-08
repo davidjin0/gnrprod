@@ -13,17 +13,18 @@
 #' @param data dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix)
 #' @param degree degree of share regression polynomial
 #' @param markov_degree degree of Markov process for persistent productivity
+#' @param B number of bootstrap draws
 #' @param fs_control an optional list of convergence settings of the first stage. See \code{gnrflex.control} for listing.
 #' @param ss_control an optional list of convergence settings of the second stage. See \code{gnriv.control} for listing.
+#' @param ... additional optional arguments to be passed to optim in the second stage.
 #' @return a list of class "gnr" with five elements:
-#' \code{avg_elasticity}: a named numeric vector of the average elasticities of all inputs
+#' \code{estimates}: a list with two elements: \code{elas} are the parameter estimates and \code{std_errors} the standard errors
 #'
-#' \code{data}: a list (dataframe) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, and \code{share} variables and estimated elasticities for each observation
+#' \code{data}: a list (dataframe) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, \code{share}, estimated elasticities for each observation, estimated productivity, and first stage residuals
 #'
-#' \code{first_stage}: a list containing six elements describing the share regression (first stage):
+#' \code{first_stage}: a list containing five elements describing the share regression (first stage):
 #' \itemize{
 #'  \item{\code{coef}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21))}
-#'  \item{\code{residuals}}{: a numeric vector of the residuals}
 #'  \item{\code{SSR}}{: sum of squared residual}
 #'  \item{\code{iterations}}{: number of iterations performed}
 #'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved}
@@ -32,44 +33,45 @@
 #'
 #' \code{second_stage}: a list containing four elements describing the second stage:
 #' \itemize{
-#'  \item{\code{productivity}}{: a numeric vector of the estimated total productivity}
-#'  \item{\code{iterations}}{: number of iterations performed}
-#'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved}
-#'  \item{\code{control}}{: list of convergence control parameters (see \code{gnriv.control})}
+#'  \item{\code{optim_method}}{: the method for optimization. Defaults to 'Nelder-Mead'.}
+#'  \item{\code{optim_info}}{: the returned list of optim. See optim.}
+#'  \item{\code{optim_control}}{: the list of control parameters passed to optim. See optim.}
+#'  \item{\code{degree}}{: degree of Markov process for persistent productivity}
 #' }
 #'
 #' @usage gnrprod(output, fixed, flex, share, in_price = NULL,
 #'                out_price = NULL, id, time, data, degree = 2,
-#'                markov_degree = 2, fs_control = gnrflex.control(),
-#'                ss_control = gnriv.control())
+#'                markov_degree = 2, B = NULL, fs_control = gnrflex.control(),
+#'                ss_control = gnriv.control(), ...)
 #' 
 #' @examples
 #' require(gnrprod)
 #' data <- colombian
-#' industry_311 <- gnrprod(output = "RGO", fixed = c("L", "K"), flex = "RI",
-#'                         share = "share", id = "id", time = "year",
-#'                         data = data, degree = 3, markov_degree = 3)
+#' industry_311 <- gnrprod(output = "RGO", fixed = c("L", "K"),
+#'                         flex = "RI", share = "share", id = "id",
+#'                         time = "year", data = data,
+#'                         degree = 3, markov_degree = 3, B = 10)
 #' @export
 
 gnrprod <- function(output, fixed, flex, share, in_price = NULL,
                     out_price = NULL, id, time, data, degree = 2,
                     markov_degree = 2, B = NULL, fs_control = gnrflex.control(),
-                    ss_control = gnriv.control()) {
+                    ss_control = gnriv.control(), ...) {
 
   cl <- match.call()
   
-  output <- get_matrix(output)
-  fixed <- get_matrix(fixed)
-  flex <- get_matrix(flex)
-  id <- get_matrix(id)
-  time <- get_matrix(time)
+  output <- get_matrix(output, data)
+  fixed <- get_matrix(fixed, data)
+  flex <- get_matrix(flex, data)
+  id <- get_matrix(id, data)
+  time <- get_matrix(time, data)
   
   if (!missing(share)) {
-    share <- get_matrix(share)
+    share <- get_matrix(share, data)
   } else if (!missing(in_price) && !missing(out_price)) {
     share <- (in_price + flex) - (out_price + output)
-    in_price <- get_matrix(in_price)
-    out_price <- get_matrix(out_price)
+    in_price <- get_matrix(in_price, data)
+    out_price <- get_matrix(out_price, data)
     colnames(share) <- "share1"
   } else {
     stop("must specify either share or both intermediate-input price and output price")
@@ -99,14 +101,9 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
   gnr_flex <- gnrflex(output = output, fixed = fixed, flex = flex,
                       share = share, id = id, time = time, degree = degree,
                       control = fs_control)
-  
-  
-  
-  time_start <- Sys.time()
+
   gnr_iv <- gnriv(object = gnr_flex, degree = markov_degree,
-                  control = ss_control)
-  time_end <- Sys.time() - time_start
-  return(gnr_iv)
+                  control = ss_control, ...)
   
   boot_sd = NULL
   if (!missing(B) && B > 1) {
@@ -124,24 +121,27 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
       boot_id <- boot_df[, ncol(boot_df) - 1]
       boot_time <- boot_df[, ncol(boot_df)]
       
-      boot_fs <- gnrflex(output = boot_output, fixed = boot_fixed,
-                         flex = boot_flex, share = boot_share, id = boot_id,
-                         time = boot_time, degree = degree, control = fs_control)
+      boot_fs <- suppressWarnings(gnrflex(output = boot_output,
+                                         fixed = boot_fixed, flex = boot_flex,
+                                         share = boot_share, id = boot_id,
+                                         time = boot_time, degree = degree,
+                                         control = fs_control))
       
       flex_elas <- mean(boot_fs$elas$flex_elas)
       
-      boot_ss <- gnriv(object = boot_fs, degree = markov_degree,
-                       control = ss_control)
+      boot_ss <- suppressWarnings(gnriv(object = boot_fs,
+                                        degree = markov_degree,
+                                        control = ss_control))
       
-      fixed_elas <- apply(boot_ss$elas, 2, mean)
+      fixed_elas <- apply(boot_ss$pred_elas, 2, mean)
       
       return(c(fixed_elas, flex_elas))
     })
     boot_est <- do.call(cbind, boot_elas)
-    boot_sd <- apply(boot_est, 1, sd)
+    boot_sd <- apply(boot_est, 1, stats::sd)
   }
   
-  pred_elas <- gnr_iv$elas
+  pred_elas <- gnr_iv$pred_elas
   flex_elas <- gnr_flex$elas$flex_elas
   elas <- data.frame(cbind(pred_elas, flex_elas))
   input_names <- c(colnames(fixed), colnames(flex))
@@ -156,9 +156,10 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
                     "convergence" = gnr_flex$elas$convergence,
                     "control" = gnr_flex$control)
 
-  ss_return <- list("iterations" = gnr_iv$iterations,
-                    "convergence" = gnr_iv$convergence,
-                    "control" = gnr_iv$control)
+  ss_return <- list("optim_method" = gnr_iv$method,
+                    "optim_info" = gnr_iv$opt_info,
+                    "optim_control" = gnr_iv$control,
+                    "degree" = gnr_iv$degree)
 
   return_average_elas <- apply(elas, MARGIN = 2, FUN = mean)
   names(return_average_elas) <- paste(input_names, "avg", sep = "_")
@@ -176,7 +177,7 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
   return(gnr_out)
 }
 
-get_matrix <- function(x) {
+get_matrix <- function(x, data) {
   if (is.null(x)) {
     return(NULL)
   }
@@ -186,7 +187,8 @@ get_matrix <- function(x) {
     colnames(col) <- x
   } else {
     col <- as.matrix(x)
-    colnames(col) <- colnames(x, do.NULL = FALSE, prefix = paste(substitute(x)))
+    colnames(col) <- colnames(x, do.NULL = FALSE,
+                              prefix = paste(substitute(x)))
   }
   return(col)
 }

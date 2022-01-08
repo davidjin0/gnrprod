@@ -6,6 +6,7 @@
 #' @param object object of class \code{gnrflex}
 #' @param degree degree of Markov process for persistent productivity
 #' @param control an optional list of convergence settings. See \code{gnriv.control} for listing.
+#' @param ... additional optional arguments passed to optim
 #' @return a list of class "gnriv" containing six elements:
 #'
 #' \code{elas}: a numeric matrix of estimated elasticities of fixed inputs for each observation
@@ -23,7 +24,7 @@
 #' @export
 
 
-gnriv <- function(object, degree, control) {
+gnriv <- function(object, degree, control, ...) {
   if (attr(object, "class") != "gnrflex") {
     stop("object must be of class gnrflex")
   }
@@ -60,19 +61,28 @@ gnriv <- function(object, degree, control) {
     control <- as.list(control)
     ctrl[names(control)] <- control
   }
+  method = ctrl[[1]]
+  ctrl[[1]] = NULL
 
-  constant_gmm <- pracma::gaussNewton(x0 = coefficients, data = pred_base,
-                                      Ffun = constant_moments,
-                                      big_Y_base = big_Y_base,
-                                      big_Y_lag = big_Y_lag,
-                                      lag_data = pred_lag,
-                                      degree = degree,
-                                      maxiter = ctrl$maxit,
-                                      tol = ctrl$reltol)
-  return(constant_gmm)
-
-  convergence <- ifelse(constant_gmm$niter >= ctrl$maxit, FALSE, TRUE)
-  C_coef <- constant_gmm$xs
+  constant_gmm <- stats::optim(par = coefficients, fn = constant_moments,
+                               data = pred_base, big_Y_base = big_Y_base,
+                               big_Y_lag = big_Y_lag, lag_data = pred_lag,
+                               degree = degree, method = method,
+                               control = ctrl, ...)
+  
+  opt_ctrl <- list(trace = 0, fnscale = 1,
+                   parscale = rep.int(1, length(coefficients)),
+                   ndeps = rep.int(1e-3, length(coefficients)),
+                   maxit = 100L, abstol = -Inf,
+                   reltol = sqrt(.Machine$double.eps),
+                   alpha = 1.0, beta = 0.5, gamma = 2.0,
+                   REPORT = 10,
+                   type = 1,
+                   lmm = 5, factr = 1e7, pgtol = 0,
+                   tmax = 10, temp = 10.0)
+  
+  opt_ctrl[names(ctrl)] <- ctrl[names(ctrl)]
+  C_coef <- constant_gmm$par
 
   input_degree <- object$arg$input_degree
   all_input <- object$arg$input
@@ -109,12 +119,12 @@ gnriv <- function(object, degree, control) {
   productivity <- as.matrix(exp(logomega + errors))
 
   elasticities <- do.call(cbind, elasticities)
-  ss_return <- list("elas" = elasticities,
+  ss_return <- list("pred_elas" = elasticities,
                     "productivity" = productivity,
                     "degree" = degree,
-                    "iterations" = constant_gmm$niter,
-                    "convergence" = convergence,
-                    "control" = control)
+                    "method" = method,
+                    "opt_info" = constant_gmm,
+                    "control" = opt_ctrl)
   class(ss_return) <- "gnriv"
   return(ss_return)
 }
@@ -136,8 +146,10 @@ constant_moments <- function(C_kl, data, big_Y_base, big_Y_lag, lag_data,
   moments <- apply(data, MARGIN = 2, FUN = function(i) {
     sum(i * csi) / length(i)
   })
-
-  return(moments)
+  
+  obj <- t(moments) %*% moments
+  
+  return(obj)
 }
 
 match_gnr <- function(i, degree_vec) {

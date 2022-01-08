@@ -4,15 +4,66 @@
 \alias{gnriv.control}
 \title{Control iterations in second stage of GNR}
 \usage{
-gnriv.control(maxit = 100, reltol = 1e-08)
+gnriv.control(
+  method = "BFGS",
+  trace,
+  fnscale,
+  parscale,
+  ndeps,
+  maxit,
+  abstol,
+  reltol,
+  alpha,
+  beta,
+  gamma,
+  REPORT,
+  type,
+  lmm,
+  factr,
+  pgtol,
+  tmax,
+  temp
+)
 }
 \arguments{
-\item{maxit}{Maximum number of iterations. Defaults to 100.}
+\item{method}{temp}
 
-\item{reltol}{Relative convergence tolerance. Defaults to 1e-8.}
+\item{trace}{temp}
+
+\item{fnscale}{temp}
+
+\item{parscale}{temp}
+
+\item{ndeps}{temp}
+
+\item{maxit}{temp}
+
+\item{abstol}{temp}
+
+\item{reltol}{temp}
+
+\item{alpha}{temp}
+
+\item{beta}{temp}
+
+\item{gamma}{temp}
+
+\item{REPORT}{temp}
+
+\item{type}{temp}
+
+\item{lmm}{temp}
+
+\item{factr}{temp}
+
+\item{pgtol}{temp}
+
+\item{tmax}{temp}
+
+\item{temp}{temp}
 }
 \value{
-a list containing two elements: \code{maxit} and \code{reltol}
+a list of called control parameters
 }
 \description{
 Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{gnriv} function
