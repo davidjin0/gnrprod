@@ -5,13 +5,13 @@
 #' @format A data frame with seven variables:
 #'
 #' \describe{
-#' \item{\code{share}}{level intermediate input's revenue share}
+#' \item{\code{share}}{log intermediate input's revenue share}
 #' \item{\code{id}}{firm id}
 #' \item{\code{year}}{the last two digits of a year between 1981 and 1991}
-#' \item{\code{RGO}}{level of real gross output with base year 1981}
-#' \item{\code{L}}{labor in level employee years}
-#' \item{\code{K}}{level of real capital stock with base year 1981}
-#' \item{\code{RI}}{level of real intermediate inputs with base year 1981}
+#' \item{\code{RGO}}{log of real gross output with base year 1981}
+#' \item{\code{L}}{log labor in level employee years}
+#' \item{\code{K}}{log real capital stock with base year 1981}
+#' \item{\code{RI}}{log real intermediate inputs with base year 1981}
 #' }
 #'
 #' For a complete listing of data, see \url{https://www.journals.uchicago.edu/doi/suppl/10.1086/707736}
