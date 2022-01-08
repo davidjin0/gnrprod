@@ -53,145 +53,146 @@
 
 gnrprod <- function(output, fixed, flex, share, in_price = NULL,
                     out_price = NULL, id, time, data, degree = 2,
-                    markov_degree = 2, fs_control = gnrflex.control(),
+                    markov_degree = 2, B = NULL, fs_control = gnrflex.control(),
                     ss_control = gnriv.control()) {
 
   cl <- match.call()
-  if (is.character(output)) {
-    y <- as.matrix(log(data[, output]))
-    output_name <- output
-  } else {
-    y <- as.matrix(log(output))
-    output_name <- colnames(output)
-    if (is.null(output_name)) {
-      output_name <- deparse(substitute(output))
-    }
-  }
-
-  if (is.character(fixed)) {
-    fixed_input <- as.matrix(log(data[, fixed]))
-    fixed_name <- fixed
-  } else {
-    fixed_input <- as.matrix(log(fixed))
-    fixed_name <- colnames(fixed)
-    if (is.null(fixed_name)) {
-      fixed_name <- paste0(deparse(substitute(fixed)), 1L:ncol(fixed))
-    }
-  }
-
-  if (is.character(flex)) {
-    flex_input <- as.matrix(log(data[, flex]))
-    flex_name <- flex
-  } else {
-    flex_input <- as.matrix(log(flex))
-    flex_name <- colnames(flex)
-    if (is.null(flex_name)) {
-      flex_name <- deparse(substitute(flex))
-    }
-  }
-
-  if (is.character(id)) {
-    idm <- as.matrix(data[, id])
-    id_name <- id
-  } else {
-    idm <- as.matrix(id)
-    id_name <- colnames(id)
-    if (is.null(id_name)) {
-      id_name <- deparse(substitute(id))
-    }
-  }
-
-  if (is.character(time)) {
-    timem <- as.matrix(data[, time])
-    time_name <- time
-  } else {
-    timem <- as.matrix(timem)
-    time_name <- colnames(time)
-    if (is.null(time_name)) {
-      time_name <- deparse(substitute(time))
-    }
-  }
-
-  if (!missing(share) && is.character(share)) {
-    sharem <- as.matrix(log(data[, share]))
-    share_name <- share
-  } else if (!missing(share) && !is.character(share)) {
-    sharem <- as.matrix(log(share))
-    share_name <- colnames(share)
-    if (is.null(share_name)) {
-      share_name <- deparse(substitute(share))
-    }
+  
+  output <- get_matrix(output)
+  fixed <- get_matrix(fixed)
+  flex <- get_matrix(flex)
+  id <- get_matrix(id)
+  time <- get_matrix(time)
+  
+  if (!missing(share)) {
+    share <- get_matrix(share)
   } else if (!missing(in_price) && !missing(out_price)) {
-    if (is.character(in_price)) {
-      in_pricem <- as.matrix(data[, in_price])
-    } else {
-      in_pricem <- as.matrix(in_price)
-    }
-
-    if (is.character(out_price)) {
-      out_pricem <- as.matrix(data[, out_price])
-    } else {
-      out_pricem <- as.matrix(out_price)
-    }
-
-    sharem = as.matrix(log((in_price * flex_input) / (out_price * y)))
-    share_name = "share"
+    share <- (in_price + flex) - (out_price + output)
+    in_price <- get_matrix(in_price)
+    out_price <- get_matrix(out_price)
+    colnames(share) <- "share1"
   } else {
-    stop("must specify either share or intermediate-input price and output price")
+    stop("must specify either share or both intermediate-input price and output price")
   }
 
-  complete_obs <- stats::complete.cases(cbind(y, fixed_input, flex_input, idm,
-                                              timem, sharem))
-  y <- y[complete_obs]
-  fixed_input <- data.frame(fixed_input[complete_obs, ])
-  flex_input <- data.frame(flex_input[complete_obs])
-  idm <- idm[complete_obs]
-  timem <- timem[complete_obs]
-  sharem <- sharem[complete_obs]
-
-  gnr_flex <- gnrflex(output = y,
-                      fixed = fixed_input,
-                      flex = flex_input,
-                      share = sharem,
-                      id = idm,
-                      time = timem,
-                      degree = degree,
+  complete_obs <- stats::complete.cases(cbind(output, fixed, flex, share, id,
+                                              time))
+  output <- output[complete_obs, , drop = FALSE]
+  fixed <- fixed[complete_obs, , drop = FALSE]
+  flex <- flex[complete_obs, , drop = FALSE]
+  id <- id[complete_obs, , drop = FALSE]
+  time <- time[complete_obs, , drop = FALSE]
+  share <- share[complete_obs, , drop = FALSE]
+  
+  if (!is.null(in_price) && !is.null(out_price)) {
+    in_price <- in_price[complete_obs, , drop = FALSE]
+    out_price <- out_price[complete_obs, , drop = FALSE]
+    mf <- cbind(output, fixed, flex, in_price, out_price, share,
+                           id, time)
+  } else {
+    mf <- cbind(output, fixed, flex, share, id, time)
+  }
+  
+  mf <- mf[order(mf[, ncol(mf) - 1], mf[, ncol(mf)]), , drop = FALSE]
+  
+  
+  gnr_flex <- gnrflex(output = output, fixed = fixed, flex = flex,
+                      share = share, id = id, time = time, degree = degree,
                       control = fs_control)
-
+  
+  
+  
+  time_start <- Sys.time()
   gnr_iv <- gnriv(object = gnr_flex, degree = markov_degree,
                   control = ss_control)
-
+  time_end <- Sys.time() - time_start
+  return(gnr_iv)
+  
+  boot_sd = NULL
+  if (!missing(B) && B > 1) {
+    id_unique <- unique(id)
+    boot_elas <- lapply(1:B, FUN = function(i) {
+      boot_ids <- sample(id_unique, length(id_unique), replace = TRUE)
+      boot_df <- do.call(rbind, lapply(boot_ids, function (x) {
+        mf[mf[, colnames(id)] == x,]
+      }))
+      
+      boot_output <- boot_df[, 1]
+      boot_fixed <- boot_df[, 2:(ncol(fixed) + 1)]
+      boot_flex <- boot_df[, (ncol(fixed) + 2):(ncol(fixed) + 1 + ncol(flex))]
+      boot_share <- boot_df[, ncol(boot_df) - 2]
+      boot_id <- boot_df[, ncol(boot_df) - 1]
+      boot_time <- boot_df[, ncol(boot_df)]
+      
+      boot_fs <- gnrflex(output = boot_output, fixed = boot_fixed,
+                         flex = boot_flex, share = boot_share, id = boot_id,
+                         time = boot_time, degree = degree, control = fs_control)
+      
+      flex_elas <- mean(boot_fs$elas$flex_elas)
+      
+      boot_ss <- gnriv(object = boot_fs, degree = markov_degree,
+                       control = ss_control)
+      
+      fixed_elas <- apply(boot_ss$elas, 2, mean)
+      
+      return(c(fixed_elas, flex_elas))
+    })
+    boot_est <- do.call(cbind, boot_elas)
+    boot_sd <- apply(boot_est, 1, sd)
+  }
+  
   pred_elas <- gnr_iv$elas
-  flex_elas <- gnr_flex$elas$flex_in_elas
+  flex_elas <- gnr_flex$elas$flex_elas
   elas <- data.frame(cbind(pred_elas, flex_elas))
-  input_names <- c(fixed_name, flex_name)
+  input_names <- c(colnames(fixed), colnames(flex))
   input_names <- paste(input_names, "elasticity", sep = "_")
   colnames(elas) <- input_names
-  return_df <- data.frame(cbind(y, fixed_input, flex_input, idm, timem, sharem))
-  colnames(return_df) <- c(output_name, fixed_name, flex_name, id_name,
-                           time_name, share_name)
-  return_df <- cbind(return_df, elas)
+  mf <- cbind(mf, elas, gnr_iv$productivity, gnr_flex$elas$residuals)
+  colnames(mf)[(ncol(mf) - 1):ncol(mf)] = c("productivity", "flex_resid")
 
   fs_return <- list("coefficients" = gnr_flex$elas$coef,
-                    "residuals" = gnr_flex$elas$residuals,
                     "SSR" = gnr_flex$elas$SSR,
                     "iterations" = gnr_flex$elas$iterations,
                     "convergence" = gnr_flex$elas$convergence,
                     "control" = gnr_flex$control)
 
-  ss_return <- list("productivity" = gnr_iv$productivity,
-                    "iterations" = gnr_iv$iterations,
+  ss_return <- list("iterations" = gnr_iv$iterations,
                     "convergence" = gnr_iv$convergence,
                     "control" = gnr_iv$control)
 
   return_average_elas <- apply(elas, MARGIN = 2, FUN = mean)
   names(return_average_elas) <- paste(input_names, "avg", sep = "_")
-  gnr_out <- list(return_average_elas, return_df, fs_return, ss_return, cl)
-  names(gnr_out) <- c("avg_elasticity", "data", "first_stage", "second_stage",
+  
+  return_sd <- boot_sd
+  if (!is.null(boot_sd)) {
+    names(return_sd) <- paste(input_names, "se", sep = "_")
+  }
+  param = list("elas" = return_average_elas, "std_errors" = return_sd)
+  
+  gnr_out <- list(param, mf, fs_return, ss_return, cl)
+  names(gnr_out) <- c("estimates", "data", "first_stage", "second_stage",
                       "call")
   class(gnr_out) <- "gnr"
   return(gnr_out)
 }
+
+get_matrix <- function(x) {
+  if (is.null(x)) {
+    return(NULL)
+  }
+  
+  if (is.character(x)) {
+    col <- as.matrix(data[, x])
+    colnames(col) <- x
+  } else {
+    col <- as.matrix(x)
+    colnames(col) <- colnames(x, do.NULL = FALSE, prefix = paste(substitute(x)))
+  }
+  return(col)
+}
+
+
+
 
 
 

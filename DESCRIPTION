@@ -7,6 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "first.last@example.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
+Maintainer: David Jin <djin6817@gmail.com>
 Description: Implements the nonparametric identification of gross output production functions specified by Gandhi, Navarro, and Rivers (2020).
 License: GPL-3
 Encoding: UTF-8
@@ -14,5 +15,4 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Imports: pracma
-Depends: 
-    R (>= 2.10)
+Depends: R (>= 2.10)

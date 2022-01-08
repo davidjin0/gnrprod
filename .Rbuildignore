@@ -1,3 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$
+^README\.Rmd$
+^cran-comments\.md$
+^gnrprod\.pdf$
+^LICENSE\.md$

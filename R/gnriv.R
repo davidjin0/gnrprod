@@ -69,6 +69,7 @@ gnriv <- function(object, degree, control) {
                                       degree = degree,
                                       maxiter = ctrl$maxit,
                                       tol = ctrl$reltol)
+  return(constant_gmm)
 
   convergence <- ifelse(constant_gmm$niter >= ctrl$maxit, FALSE, TRUE)
   C_coef <- constant_gmm$xs

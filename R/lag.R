@@ -1,10 +1,10 @@
 lag_gnr <- function(unsorted) {
-  unique_ids <- unique(unsorted$id)
+  unique_ids <- unique(unsorted[, 1])
   lag_indic <- 3:ncol(unsorted)
 
   lagged_list <- lapply(unique_ids, FUN = function(i) {
-    i_df <- unsorted[unsorted$id == i, ]
-    i_df <- i_df[order(i_df$time), ]
+    i_df <- unsorted[unsorted[, 1] == i, ]
+    i_df <- i_df[order(i_df[, 2]), ]
 
     lag_1_df <- data.frame(matrix(NA, nrow = 1, ncol = length(lag_indic)))
     colnames(lag_1_df)[1:ncol(lag_1_df)] = colnames(i_df)[lag_indic]

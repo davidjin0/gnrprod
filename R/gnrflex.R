@@ -39,18 +39,24 @@
 #'
 #' @export
 
-gnrflex <- function(output, fixed, flex, share, id, time, degree, control) {
-
-  all_input <- as.matrix(cbind(fixed, flex))
-  poly_input <- as.matrix(stats::poly(all_input, degree = degree, raw = TRUE))
+gnrflex <- function(output, fixed, flex, share, id, time, degree = 2,
+                    control = gnrflex.control()) {
+  
+  complete_obs <- stats::complete.cases(cbind(output, fixed, flex, id, time,
+                                              share))
+  
+  if (length(complete_obs) != length(output)) {
+    stop("'output', 'fixed', 'flex', 'share', 'id', and 'time' cannot contain missing values")
+  }
+  
+  all_input <- cbind(fixed, flex)
+  poly_input <- stats::poly(all_input, degree = degree, raw = TRUE)
   input_degrees <- sapply(colnames(poly_input), FUN = function(x) {
-    a <- data.frame(base::strsplit(x, split = "[.]")[[1]])
+    a <- base::strsplit(x, split = "[.]")[[1]]
   })
+  input_degrees <- apply(input_degrees, 2, as.numeric)
 
-  input_degrees <- data.frame(do.call(cbind, input_degrees))
-  input_degrees <- sapply(input_degrees, as.numeric)
-
-  gamma_denom <- rbind(1, matrix(input_degrees[nrow(input_degrees), ] + 1))
+  gamma_denom <- rbind(1, as.matrix(input_degrees[nrow(input_degrees), ] + 1))
   start_reg <- stats::lm(share ~ poly_input)
 
   constant <- start_reg$fitted.values - stats::coef(start_reg)[1]
@@ -58,24 +64,22 @@ gnrflex <- function(output, fixed, flex, share, id, time, degree, control) {
 
   start <- c(constant, (coef(start_reg)[-1]))
 
-  share_reg <- gauss_newton_reg(start = start, data = poly_input, share = share,
-                                control = control)
+  share_reg <- gauss_newton_reg(start = start, data = poly_input,
+                                share = share, control = control)
 
   coef <- share_reg[[1]]
-  i_elas <- log(evaluate_gnr(coef, poly_input))
-
+  i_elas <- log(pred_fs(coef, poly_input))
   errors <- i_elas - share
   mean_exp_err <- mean(exp(errors))
   i_elas <- exp(i_elas - log(mean_exp_err))
-
   gamma <- as.matrix(coef / mean_exp_err)
   flex_gamma <- gamma / gamma_denom
 
-  integ_G_I <- evaluate_gnr(flex_gamma, poly_input)
+  integ_G_I <- pred_fs(flex_gamma, poly_input)
   integ_G_I <- integ_G_I * flex
   big_Y <- as.matrix(output - errors - integ_G_I)
 
-  fs_elas <- list("flex_in_elas" = i_elas,
+  fs_elas <- list("flex_elas" = i_elas,
                   "coef" = coef,
                   "residuals" = errors,
                   "SSR" = share_reg$SSR,
@@ -109,7 +113,7 @@ gauss_newton_reg <- function(start, data, share, control) {
   names(inputs_1)[1] <- "constant"
 
   while (iter < ctrl$maxit) {
-    initial_pred <- evaluate_gnr(call_start, data)
+    initial_pred <- pred_fs(call_start, data)
 
     X <- as.matrix(inputs_1 / initial_pred)
 
@@ -117,7 +121,7 @@ gauss_newton_reg <- function(start, data, share, control) {
     initial_SSR <- t(initial_errors) %*% initial_errors
 
     new_start <- call_start + (solve(t(X) %*% X) %*% t(X) %*% initial_errors)
-    new_pred <- evaluate_gnr(new_start, data)
+    new_pred <- pred_fs(new_start, data)
     suppressWarnings(new_errors <- cbind(share - log(new_pred)))
     new_SSR <- t(new_errors) %*% new_errors
 
@@ -129,7 +133,7 @@ gauss_newton_reg <- function(start, data, share, control) {
       initial_step <- initial_step / 2
       new_start <- call_start +
         initial_step * (solve(t(X) %*% X) %*% t(X) %*% initial_errors)
-      new_pred <- evaluate_gnr(new_start, data)
+      new_pred <- pred_fs(new_start, data)
       suppressWarnings(new_errors <- cbind(share - log(new_pred)))
       new_SSR <- t(new_errors) %*% new_errors
     }
@@ -159,7 +163,7 @@ gauss_newton_reg <- function(start, data, share, control) {
 }
 
 
-evaluate_gnr <- function(start, data) {
+pred_fs <- function(start, data) {
   matrix <- as.matrix(cbind(rep(1, nrow(data)), data))
   new_m <- matrix %*% start
   return(new_m)
