@@ -4,31 +4,22 @@
 \alias{gnrflex}
 \title{Estimate flexible input elasticity: Gandhi, Navarro, Rivers (GNR) share regression}
 \usage{
-gnrflex(
-  output,
-  fixed,
-  flex,
-  share,
-  id,
-  time,
-  degree = 2,
-  control = gnrflex.control()
-)
+gnrflex(output, fixed, flex, share, id, time, data, control)
 }
 \arguments{
-\item{output}{a numeric vector of level gross output}
+\item{output}{name (character) of variable of log gross output in data or a numeric vector.}
 
-\item{fixed}{a numeric matrix of level fixed inputs}
+\item{fixed}{name (character or character vector) of variables of log fixed inputs in data or a numeric matrix.}
 
-\item{flex}{a numeric vector of level flexible input}
+\item{flex}{name (character) of variable of log flexible input in data or a numeric vector.}
 
-\item{share}{a numeric vector of the level intermediate input's revenue share}
+\item{share}{name (character) of variable of log intermediate input's revenue share in data or a numeric vector.}
 
-\item{id}{a numeric vector of firm ids}
+\item{id}{name (character) of variable of firm id in data or a numeric vector.}
 
-\item{time}{a numeric vector of time}
+\item{time}{name (character) of variable of time in data or a numeric vector.}
 
-\item{degree}{degree of share regression polynomial}
+\item{data}{dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix rather than strings).}
 
 \item{control}{an optional list of convergence settings. See \code{gnrflex.control} for listing.}
 }
@@ -38,29 +29,44 @@ a list of class "gnrflex" containing three elements:
 \code{elas}: a list containing six elements describing the share regression:
 
 \itemize{
-\item{\code{flex_in_elas}}{: a numeric vector of the estimated flexible input elasticity for each observation}
-\item{\code{coef}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21))}
-\item{\code{residuals}}{: a numeric vector of the residuals}
-\item{\code{SSR}}{: sum of squared residuals}
-\item{\code{iterations}}{: number of iterations performed}
-\item{\code{convergence}}{: boolean indicating whether convergence was achieved}
+\item{\code{flex_elas}}{: a numeric vector of the estimated flexible input elasticity for each observation.}
+\item{\code{coefficients}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21)).}
+\item{\code{residuals}}{: a numeric vector of the residuals.}
+\item{\code{SSR}}{: sum of squared residuals.}
+\item{\code{iterations}}{: number of iterations performed.}
+\item{\code{convergence}}{: boolean indicating whether convergence was achieved.}
 }
 
-\code{arg}: a list containing seven elements to be passed to the second stage function \code{gnriv}
+\code{arg}: a list containing seven elements to be passed to the second stage function \code{gnriv}:
 \itemize{
-\item{\code{input}}{: a numeric matrix (S3 'poly') of the polynomial expansion of all inputs}
-\item{\code{input_degree}}{: a numeric matrix corresponding to \code{input} denoting each vector's degree}
-\item{\code{big_Y}}{: a numeric vector of persistent productivity minus the constant of integration (equation (16) in Gandhi, Navarro, and Rivers (2020))}
-\item{\code{D_coef}}{: a numeric vector equalling \code{coef} divided by an estimate of the constant}
-\item{\code{id}}{: a numeric vector of the firm ids}
-\item{\code{time}}{: a numeric vector of time}
-\item{\code{degree}}{: the degree of the share regression}
+\item{\code{input}}{: a numeric matrix (S3: \code{poly}) of the polynomial expansion of all inputs.}
+\item{\code{input_degree}}{: a numeric matrix corresponding to \code{input} denoting each vector's degree.}
+\item{\code{big_Y}}{: a numeric vector of persistent productivity minus the constant of integration (equation (16) in Gandhi, Navarro, and Rivers (2020)).}
+\item{\code{D_coef}}{: a numeric vector equaling \code{coef} divided by an estimate of the constant.}
+\item{\code{id}}{: a numeric vector of the firm ids.}
+\item{\code{time}}{: a numeric vector of time.}
+\item{\code{degree}}{: the degree of the share regression.}
 }
 
-\code{control}: the list of convergence control parameters. See \code{gnrflex.control}
+\code{control}: the list of convergence control parameters. See \code{gnrflex.control}.
 }
 \description{
-The \code{gnrflex} function implements the first stage (share regression) of the GNR production function estimation routine, nonparametrically identifying the flexible input elasticity of the production function. This function is called in the main wrapper function \code{gnrprod}. It currently supports only one flexible input.
+The \code{gnrflex} function implements the first stage (share
+regression) of the GNR production function estimation routine,
+nonparametrically identifying the flexible input elasticity of the
+production function. This function is called within the main wrapper
+function \code{gnrprod}. It accepts the names of function inputs along with
+a data set or matrices/vectors directly. \code{gnrflex} currently supports only
+one flexible input.
 
 For details, see Gandhi, Navarro, and Rivers (2020).
+}
+\examples{
+require(gnrprod)
+data <- colombian
+industry_311_flex <- gnrflex(output = "RGO", fixed = c("L", "K"),
+                             flex = "RI", share = "share", id = "id",
+                             time = "year", data = data,
+                             control = list(degree = 2, maxit = 200))
+
 }

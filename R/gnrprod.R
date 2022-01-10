@@ -1,67 +1,68 @@
 #' Estimate production functions and productivity: Gandhi, Navarro, and Rivers (2020)
+#' @description The \code{gnrprod} function is the front end of the
+#' \code{gnrprod} package. It estimates production functions and productivity
+#' in two stages: \code{gnrflex} (estimate flexible input elasticity) and
+#' \code{gnriv} (estimate fixed input elasticities and productivity). It
+#' accepts the names of function inputs with a dataframe or matrices/vectors
+#' directly. \code{gnrprod} currently supports only one flexible input.
 #'
-#' @description The \code{gnrprod} function is the front end of the \code{gnrprod} package. It estimates production functions and productivity in two stages: \code{gnrflex} (estimate flexible input elasticity) and \code{gnriv} (estimate fixed input elasticities and productivity). It currently supports only one flexible input.
-#'
-#' @param output name (character) of variable of log gross output or a numeric vector.
-#' @param fixed name (character or character vector) of variables of log fixed inputs or a numeric matrix.
-#' @param flex name (character) of variable of log flexible input or a numeric vector.
-#' @param share name (character) of variable of log intermediate input's revenue share or a numeric vector.
+#' @param output name (character) of variable of log gross output in data or a numeric vector.
+#' @param fixed name (character or character vector) of variables of log fixed inputs in data or a numeric matrix.
+#' @param flex name (character) of variable of log flexible input in data or a numeric vector.
+#' @param share name (character) of variable of log intermediate input's revenue share in data or a numeric vector.
 #' @param in_price optional (required if \code{share} is not specified) name (character) of variable of common flexible input price or a numeric vector.
 #' @param out_price optional (required if \code{share} is not specified) name (character) of variable of common output price or a numeric vector.
-#' @param id name (character) of variable of firm id or a numeric vector.
-#' @param time name (character) of variable of time or a numeric vector.
-#' @param data dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix).
-#' @param degree degree of share regression polynomial. Defaults to 2.
-#' @param markov_degree degree of Markov process for persistent productivity. Defaults to 2.
-#' @param B number of bootstrap repetitions to retrieve standard errors of elasticity estimates. By default, \code{gnrprod} does not bootstrap, i.e., \code{B = NULL}.
+#' @param id name (character) of variable of firm id in data or a numeric vector.
+#' @param time name (character) of variable of time in data or a numeric vector.
+#' @param data dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix rather than strings).
+#' @param B number of bootstrap repetitions to retrieve standard errors of elasticity estimates. By default, \code{gnrprod} does not bootstrap, i.e., \code{B = NULL}. Setting \code{B > 1} will output bootstrapped standard errors. 
 #' @param fs_control an optional list of convergence settings of the first stage. See \code{gnrflex.control} for listing.
 #' @param ss_control an optional list of convergence settings of the second stage. See \code{gnriv.control} for listing.
 #' @param ... additional optional arguments to be passed to optim in the second stage.
 #' @return a list of class "gnr" with five elements:
-#' \code{estimates}: a list with two elements: \code{elas} are the parameter estimates and \code{std_errors} the standard errors
+#' \code{estimates}: a list with two elements: \code{elas} the parameter estimates and \code{std_errors} the standard errors.
 #'
-#' \code{data}: a list (dataframe) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, \code{share}, estimated elasticities for each observation, estimated productivity, and first stage residuals
+#' \code{data}: a list (S3: `dataframe`) containing:\code{output}, \code{fixed}, \code{flex}, \code{share}, \code{id}, \code{time}, estimated elasticities for each observation, estimated productivity, and first stage residuals.
 #'
 #' \code{first_stage}: a list containing five elements describing the share regression (first stage):
 #' \itemize{
-#'  \item{\code{coef}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21))}
-#'  \item{\code{SSR}}{: sum of squared residual}
-#'  \item{\code{iterations}}{: number of iterations performed}
-#'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved}
-#'  \item{\code{control}}{: list of convergence control parameters (see \code{gnrflex.control})}
+#'  \item{\code{coefficients}}{: a numeric vector of the coefficients of the first stage estimator scaled by a constant (equation (21)).}
+#'  \item{\code{SSR}}{: sum of squared residual.}
+#'  \item{\code{iterations}}{: number of iterations performed.}
+#'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved.}
+#'  \item{\code{control}}{: list of convergence control parameters (see \code{gnrflex.control}).}
 #' }
 #'
 #' \code{second_stage}: a list containing four elements describing the second stage:
 #' \itemize{
-#'  \item{\code{optim_method}}{: the method for optimization. Defaults to 'Nelder-Mead'.}
-#'  \item{\code{optim_info}}{: the returned list of optim. See optim.}
+#'  \item{\code{optim_method}}{: the method for optimization. Defaults to 'BFGS'.}
+#'  \item{\code{optim_info}}{: the returned list of the optim function estimating the coefficients of the constant of integration (equation (22)). See optim.}
 #'  \item{\code{optim_control}}{: the list of control parameters passed to optim. See optim.}
-#'  \item{\code{degree}}{: degree of Markov process for persistent productivity}
+#'  \item{\code{degree}}{: degree of Markov process for persistent productivity.}
 #' }
 #' 
-#' \code{call}: the function call
+#' \code{call}: the function call.
+#' 
 #'
 #' @usage gnrprod(output, fixed, flex, share, in_price = NULL,
-#'                out_price = NULL, id, time, data, degree = 2,
-#'                markov_degree = 2, B = NULL,
-#'                fs_control = gnrflex.control(),
-#'                ss_control = gnriv.control(), ...)
+#'                out_price = NULL, id, time, data, B = NULL,
+#'                fs_control = NULL, ss_control = NULL, ...)
 #' 
 #' @examples
 #' require(gnrprod)
 #' data <- colombian
 #' industry_311 <- gnrprod(output = "RGO", fixed = c("L", "K"),
 #'                         flex = "RI", share = "share", id = "id",
-#'                         time = "year", data = data, degree = 3,
-#'                         markov_degree = 3, B = 10)
+#'                         time = "year", data = data,
+#'                         fs_control = list(degree = 2, maxit = 200),
+#'                         ss_control = list(trace = 1))
 #'                         
 #' @references Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." *Journal of Political Economy*, 128(8): 2973-3016. https://doi.org/10.1086/707736.
 #' @export
 
 gnrprod <- function(output, fixed, flex, share, in_price = NULL,
-                    out_price = NULL, id, time, data, degree = 2,
-                    markov_degree = 2, B = NULL, fs_control = gnrflex.control(),
-                    ss_control = gnriv.control(), ...) {
+                    out_price = NULL, id, time, data, B = NULL,
+                    fs_control = NULL, ss_control = NULL, ...) {
 
   cl <- match.call()
   
@@ -84,12 +85,16 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
 
   complete_obs <- stats::complete.cases(cbind(output, fixed, flex, share, id,
                                               time))
-  output <- output[complete_obs, , drop = FALSE]
-  fixed <- fixed[complete_obs, , drop = FALSE]
-  flex <- flex[complete_obs, , drop = FALSE]
-  id <- id[complete_obs, , drop = FALSE]
-  time <- time[complete_obs, , drop = FALSE]
-  share <- share[complete_obs, , drop = FALSE]
+  
+  if (sum(complete_obs) != length(output)) {
+    output <- output[complete_obs, , drop = FALSE]
+    fixed <- fixed[complete_obs, , drop = FALSE]
+    flex <- flex[complete_obs, , drop = FALSE]
+    id <- id[complete_obs, , drop = FALSE]
+    time <- time[complete_obs, , drop = FALSE]
+    share <- share[complete_obs, , drop = FALSE]
+    warning("'output', 'fixed', 'flex', 'share', 'id', and 'time' contains incomplete observations: observations omitted")
+  }
   
   if (!is.null(in_price) && !is.null(out_price)) {
     in_price <- in_price[complete_obs, , drop = FALSE]
@@ -104,13 +109,12 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
   
   
   gnr_flex <- gnrflex(output = output, fixed = fixed, flex = flex,
-                      share = share, id = id, time = time, degree = degree,
+                      share = share, id = id, time = time,
                       control = fs_control)
 
-  gnr_iv <- gnriv(object = gnr_flex, degree = markov_degree,
-                  control = ss_control, ...)
+  gnr_iv <- gnriv(object = gnr_flex, control = ss_control, ...)
   
-  boot_sd = NULL
+  boot_sd <- NULL
   if (!missing(B) && B > 1) {
     id_unique <- unique(id)
     boot_elas <- lapply(1:B, FUN = function(i) {
@@ -129,16 +133,15 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
       boot_fs <- suppressWarnings(gnrflex(output = boot_output,
                                          fixed = boot_fixed, flex = boot_flex,
                                          share = boot_share, id = boot_id,
-                                         time = boot_time, degree = degree,
+                                         time = boot_time,
                                          control = fs_control))
       
       flex_elas <- mean(boot_fs$elas$flex_elas)
       
       boot_ss <- suppressWarnings(gnriv(object = boot_fs,
-                                        degree = markov_degree,
-                                        control = ss_control))
+                                        control = ss_control, ...))
       
-      fixed_elas <- apply(boot_ss$pred_elas, 2, mean)
+      fixed_elas <- apply(boot_ss$fixed_elas, 2, mean)
       
       return(c(fixed_elas, flex_elas))
     })
@@ -146,25 +149,25 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
     boot_sd <- apply(boot_est, 1, stats::sd)
   }
   
-  pred_elas <- gnr_iv$pred_elas
+  fixed_elas <- gnr_iv$fixed_elas
   flex_elas <- gnr_flex$elas$flex_elas
-  elas <- data.frame(cbind(pred_elas, flex_elas))
+  elas <- data.frame(cbind(fixed_elas, flex_elas))
   input_names <- c(colnames(fixed), colnames(flex))
   input_names <- paste(input_names, "elasticity", sep = "_")
   colnames(elas) <- input_names
   mf <- cbind(mf, elas, gnr_iv$productivity, gnr_flex$elas$residuals)
-  colnames(mf)[(ncol(mf) - 1):ncol(mf)] = c("productivity", "flex_resid")
+  colnames(mf)[(ncol(mf) - 1):ncol(mf)] <- c("productivity", "flex_resid")
 
-  fs_return <- list("coefficients" = gnr_flex$elas$coef,
+  fs_return <- list("coefficients" = gnr_flex$elas$coefficients,
                     "SSR" = gnr_flex$elas$SSR,
                     "iterations" = gnr_flex$elas$iterations,
                     "convergence" = gnr_flex$elas$convergence,
                     "control" = gnr_flex$control)
 
-  ss_return <- list("optim_method" = gnr_iv$method,
+  ss_return <- list("optim_method" = gnr_iv$control$method,
                     "optim_info" = gnr_iv$opt_info,
-                    "optim_control" = gnr_iv$control,
-                    "degree" = gnr_iv$degree)
+                    "optim_control" = gnr_iv$control$optim_control,
+                    "degree" = gnr_iv$control$degree)
 
   return_average_elas <- apply(elas, MARGIN = 2, FUN = mean)
   names(return_average_elas) <- paste(input_names, "avg", sep = "_")
@@ -185,6 +188,10 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
 get_matrix <- function(x, data) {
   if (is.null(x)) {
     return(NULL)
+  }
+  
+  if (is.character(x) && missing(data)) {
+    stop(paste(deparse(substitute(x)), "is a string but argument `data` is missing"))
   }
   
   if (is.character(x)) {

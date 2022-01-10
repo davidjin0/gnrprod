@@ -5,34 +5,29 @@
 \title{Estimate production functions and productivity: Gandhi, Navarro, and Rivers (2020)}
 \usage{
 gnrprod(output, fixed, flex, share, in_price = NULL,
-               out_price = NULL, id, time, data, degree = 2,
-               markov_degree = 2, B = NULL, fs_control = gnrflex.control(),
-               ss_control = gnriv.control(), ...)
+               out_price = NULL, id, time, data, B = NULL,
+               fs_control = NULL, ss_control = NULL, ...)
 }
 \arguments{
-\item{output}{name (character) of variable of level gross output or a numeric vector}
+\item{output}{name (character) of variable of log gross output in data or a numeric vector.}
 
-\item{fixed}{name (character or character vector) of variables of level fixed inputs or a numeric matrix}
+\item{fixed}{name (character or character vector) of variables of log fixed inputs in data or a numeric matrix.}
 
-\item{flex}{name (character) of variable of level flexible input or a numeric vector}
+\item{flex}{name (character) of variable of log flexible input in data or a numeric vector.}
 
-\item{share}{name (character) of variable of level intermediate input's revenue share or a numeric vector}
+\item{share}{name (character) of variable of log intermediate input's revenue share in data or a numeric vector.}
 
-\item{in_price}{optional (required if \code{share} is not specified) name (character) of variable of common flexible input price or a numeric vector}
+\item{in_price}{optional (required if \code{share} is not specified) name (character) of variable of common flexible input price or a numeric vector.}
 
-\item{out_price}{optional (required if \code{share} is not specified) name (character) of variable of common output price or a numeric vector}
+\item{out_price}{optional (required if \code{share} is not specified) name (character) of variable of common output price or a numeric vector.}
 
-\item{id}{name (character) of variable of firm id or a numeric vector}
+\item{id}{name (character) of variable of firm id in data or a numeric vector.}
 
-\item{time}{name (character) of variable of time or a numeric vector}
+\item{time}{name (character) of variable of time in data or a numeric vector.}
 
-\item{data}{dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix)}
+\item{data}{dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix rather than strings).}
 
-\item{degree}{degree of share regression polynomial}
-
-\item{markov_degree}{degree of Markov process for persistent productivity}
-
-\item{B}{number of bootstrap draws}
+\item{B}{number of bootstrap repetitions to retrieve standard errors of elasticity estimates. By default, \code{gnrprod} does not bootstrap, i.e., \code{B = NULL}. Setting \code{B > 1} will output bootstrapped standard errors.}
 
 \item{fs_control}{an optional list of convergence settings of the first stage. See \code{gnrflex.control} for listing.}
 
@@ -42,29 +37,36 @@ gnrprod(output, fixed, flex, share, in_price = NULL,
 }
 \value{
 a list of class "gnr" with five elements:
-\code{estimates}: a list with two elements: \code{elas} are the parameter estimates and \code{std_errors} the standard errors
+\code{estimates}: a list with two elements: \code{elas} the parameter estimates and \code{std_errors} the standard errors.
 
-\code{data}: a list (dataframe) containing:\code{output}, \code{fixed}, \code{flex}, \code{id}, \code{time}, \code{share}, estimated elasticities for each observation, estimated productivity, and first stage residuals
+\code{data}: a list (S3: \code{dataframe}) containing:\code{output}, \code{fixed}, \code{flex}, \code{share}, \code{id}, \code{time}, estimated elasticities for each observation, estimated productivity, and first stage residuals.
 
 \code{first_stage}: a list containing five elements describing the share regression (first stage):
 \itemize{
-\item{\code{coef}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21))}
-\item{\code{SSR}}{: sum of squared residual}
-\item{\code{iterations}}{: number of iterations performed}
-\item{\code{convergence}}{: boolean indicating whether convergence was achieved}
-\item{\code{control}}{: list of convergence control parameters (see \code{gnrflex.control})}
+\item{\code{coefficients}}{: a numeric vector of the coefficients of the first stage estimator scaled by a constant (equation (21)).}
+\item{\code{SSR}}{: sum of squared residual.}
+\item{\code{iterations}}{: number of iterations performed.}
+\item{\code{convergence}}{: boolean indicating whether convergence was achieved.}
+\item{\code{control}}{: list of convergence control parameters (see \code{gnrflex.control}).}
 }
 
 \code{second_stage}: a list containing four elements describing the second stage:
 \itemize{
-\item{\code{optim_method}}{: the method for optimization. Defaults to 'Nelder-Mead'.}
-\item{\code{optim_info}}{: the returned list of optim. See optim.}
+\item{\code{optim_method}}{: the method for optimization. Defaults to 'BFGS'.}
+\item{\code{optim_info}}{: the returned list of the optim function estimating the coefficients of the constant of integration (equation (22)). See optim.}
 \item{\code{optim_control}}{: the list of control parameters passed to optim. See optim.}
-\item{\code{degree}}{: degree of Markov process for persistent productivity}
+\item{\code{degree}}{: degree of Markov process for persistent productivity.}
 }
+
+\code{call}: the function call.
 }
 \description{
-The \code{gnrprod} function is the front end of the \code{gnrprod} package. It estimates production functions and productivity in two stages: \code{gnrflex} (estimate flexible input elasticity) and \code{gnriv} (estimate fixed input elasticities and productivity). It currently supports only one flexible input.
+The \code{gnrprod} function is the front end of the
+\code{gnrprod} package. It estimates production functions and productivity
+in two stages: \code{gnrflex} (estimate flexible input elasticity) and
+\code{gnriv} (estimate fixed input elasticities and productivity). It
+accepts the names of function inputs with a dataframe or matrices/vectors
+directly. \code{gnrprod} currently supports only one flexible input.
 }
 \examples{
 require(gnrprod)
@@ -72,5 +74,10 @@ data <- colombian
 industry_311 <- gnrprod(output = "RGO", fixed = c("L", "K"),
                         flex = "RI", share = "share", id = "id",
                         time = "year", data = data,
-                        degree = 3, markov_degree = 3, B = 10)
+                        fs_control = list(degree = 2, maxit = 200),
+                        ss_control = list(trace = 1))
+                        
+}
+\references{
+Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." \emph{Journal of Political Economy}, 128(8): 2973-3016. https://doi.org/10.1086/707736.
 }

@@ -1,30 +1,17 @@
 #' Control iterations in second stage of GNR
 #' @description Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{gnriv} function
 #' 
-#' @param method temp
-#' @param trace temp
-#' @param fnscale temp
-#' @param parscale temp
-#' @param ndeps temp
-#' @param maxit  temp
-#' @param abstol temp
-#' @param reltol temp
-#' @param alpha temp
-#' @param beta temp
-#' @param gamma temp
-#' @param REPORT temp
-#' @param type temp
-#' @param lmm temp
-#' @param factr temp
-#' @param pgtol temp
-#' @param tmax temp
-#' @param temp temp
-#' @return a list of called control parameters
+#' @param degree degree of Markov process for persistent productivity. Defaults to 3.
+#' @param method the method of optimization passed to optim. Defaults to "BFGS." See optim for listing of available methods.
+#' @param ... additional optional control parameters passed to optim. See optim for available parameters.
+#' @return a list containing `degree` and `method` and any additional parameters in `...`. 
 #'
 #' @export
 
-gnriv.control <- function(method = "BFGS", trace, fnscale, parscale, ndeps,
-                          maxit, abstol, reltol, alpha, beta, gamma, REPORT,
-                          type, lmm, factr, pgtol, tmax, temp) {
-  return(list(method, match.call())[-2])
+gnriv.control <- function(degree = 3, method = "BFGS", ...) {
+  
+  return(list(degree = degree, method = method, ...))
 }
+
+
+

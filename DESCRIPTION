@@ -1,18 +1,18 @@
 Package: gnrprod
-Title: Estimates Production Functions
-Version: 0.0.0.9000
+Title: Estimates Gross Output Functions
+Version: 1.0.0
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "David",
+           family = "Jin",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           email = "djin6817@example.com")
+Author: David Jin [aut, cre]
 Maintainer: David Jin <djin6817@gmail.com>
-Description: Implements the nonparametric identification of gross output production functions specified by Gandhi, Navarro, and Rivers (2020).
+Description: Estimation of gross output production functions and productivity in the presense of numerous fixed (nonflexible) and a single flexible input using the nonparametric identification strategy specified in Gandhi, Navarro, and Rivers (2020) <https://doi.org/10.1086/707736>. Monte Carlo evidence from the paper demonstrates high performance in estimating production function elasticities.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-Imports: pracma
+Imports: base, data.table, stats
 Depends: R (>= 2.10)

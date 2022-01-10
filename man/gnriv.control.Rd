@@ -4,66 +4,17 @@
 \alias{gnriv.control}
 \title{Control iterations in second stage of GNR}
 \usage{
-gnriv.control(
-  method = "BFGS",
-  trace,
-  fnscale,
-  parscale,
-  ndeps,
-  maxit,
-  abstol,
-  reltol,
-  alpha,
-  beta,
-  gamma,
-  REPORT,
-  type,
-  lmm,
-  factr,
-  pgtol,
-  tmax,
-  temp
-)
+gnriv.control(degree = 3, method = "BFGS", ...)
 }
 \arguments{
-\item{method}{temp}
+\item{degree}{degree of Markov process for persistent productivity. Defaults to 3.}
 
-\item{trace}{temp}
+\item{method}{the method of optimization passed to optim. Defaults to "BFGS." See optim for listing of available methods.}
 
-\item{fnscale}{temp}
-
-\item{parscale}{temp}
-
-\item{ndeps}{temp}
-
-\item{maxit}{temp}
-
-\item{abstol}{temp}
-
-\item{reltol}{temp}
-
-\item{alpha}{temp}
-
-\item{beta}{temp}
-
-\item{gamma}{temp}
-
-\item{REPORT}{temp}
-
-\item{type}{temp}
-
-\item{lmm}{temp}
-
-\item{factr}{temp}
-
-\item{pgtol}{temp}
-
-\item{tmax}{temp}
-
-\item{temp}{temp}
+\item{...}{additional optional control parameters passed to optim. See optim for available parameters.}
 }
 \value{
-a list of called control parameters
+a list containing \code{degree} and \code{method} and any additional parameters in \code{...}.
 }
 \description{
 Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{gnriv} function

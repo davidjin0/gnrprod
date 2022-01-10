@@ -1,15 +1,21 @@
 #' Estimate flexible input elasticity: Gandhi, Navarro, Rivers (GNR) share regression
-#' @description The \code{gnrflex} function implements the first stage (share regression) of the GNR production function estimation routine, nonparametrically identifying the flexible input elasticity of the production function. This function is called in the main wrapper function \code{gnrprod}. It currently supports only one flexible input.
+#' @description The \code{gnrflex} function implements the first stage (share
+#' regression) of the GNR production function estimation routine,
+#' nonparametrically identifying the flexible input elasticity of the
+#' production function. This function is called within the main wrapper
+#' function \code{gnrprod}. It accepts the names of function inputs along with
+#' a data set or matrices/vectors directly. \code{gnrflex} currently supports only
+#' one flexible input.
 #'
 #' For details, see Gandhi, Navarro, and Rivers (2020).
 #'
-#' @param output a numeric vector of log gross output.
-#' @param fixed a numeric matrix of log fixed inputs.
-#' @param flex a numeric vector of log flexible input.
-#' @param share a numeric vector of the log intermediate input's revenue share.
-#' @param id a numeric vector of firm ids.
-#' @param time a numeric vector of time.
-#' @param degree degree of share regression polynomial. Defaults to 2.
+#' @param output name (character) of variable of log gross output in data or a numeric vector.
+#' @param fixed name (character or character vector) of variables of log fixed inputs in data or a numeric matrix.
+#' @param flex name (character) of variable of log flexible input in data or a numeric vector.
+#' @param share name (character) of variable of log intermediate input's revenue share in data or a numeric vector.
+#' @param id name (character) of variable of firm id in data or a numeric vector.
+#' @param time name (character) of variable of time in data or a numeric vector.
+#' @param data dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix rather than strings).
 #' @param control an optional list of convergence settings. See \code{gnrflex.control} for listing.
 #' @return a list of class "gnrflex" containing three elements:
 #'
@@ -17,7 +23,7 @@
 #'
 #' \itemize{
 #'  \item{\code{flex_elas}}{: a numeric vector of the estimated flexible input elasticity for each observation.}
-#'  \item{\code{coef}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21)).}
+#'  \item{\code{coefficients}}{: a numeric vector of the coefficients of the estimator scaled by a constant (equation (21)).}
 #'  \item{\code{residuals}}{: a numeric vector of the residuals.}
 #'  \item{\code{SSR}}{: sum of squared residuals.}
 #'  \item{\code{iterations}}{: number of iterations performed.}
@@ -26,7 +32,7 @@
 #'
 #' \code{arg}: a list containing seven elements to be passed to the second stage function \code{gnriv}:
 #' \itemize{
-#'  \item{\code{input}}{: a numeric matrix (S3 'poly') of the polynomial expansion of all inputs.}
+#'  \item{\code{input}}{: a numeric matrix (S3: `poly`) of the polynomial expansion of all inputs.}
 #'  \item{\code{input_degree}}{: a numeric matrix corresponding to \code{input} denoting each vector's degree.}
 #'  \item{\code{big_Y}}{: a numeric vector of persistent productivity minus the constant of integration (equation (16) in Gandhi, Navarro, and Rivers (2020)).}
 #'  \item{\code{D_coef}}{: a numeric vector equaling \code{coef} divided by an estimate of the constant.}
@@ -37,23 +43,46 @@
 #'
 #' \code{control}: the list of convergence control parameters. See \code{gnrflex.control}.
 #' 
-#' @usage gnrflex(output, fixed, flex, share, id, time, degree = 2,
-#'                control = gnrflex.control())
+#' @usage gnrflex(output, fixed, flex, share, id, time, data, control)
+#' @examples 
+#' require(gnrprod)
+#' data <- colombian
+#' industry_311_flex <- gnrflex(output = "RGO", fixed = c("L", "K"),
+#'                              flex = "RI", share = "share", id = "id",
+#'                              time = "year", data = data,
+#'                              control = list(degree = 2, maxit = 200))
 #' 
 #' @export
 
-gnrflex <- function(output, fixed, flex, share, id, time, degree = 2,
-                    control = gnrflex.control()) {
+gnrflex <- function(output, fixed, flex, share, id, time, data, control) {
+  
+  ctrl <- gnrflex.control()
+  if (!missing(control)) {
+    control <- as.list(control)
+    ctrl[names(control)] <- control
+  }
+  
+  output <- get_matrix(output, data)
+  fixed <- get_matrix(fixed, data)
+  flex <- get_matrix(flex, data)
+  share <- get_matrix(share, data)
+  id <- get_matrix(id, data)
+  time <- get_matrix(time, data)
   
   complete_obs <- stats::complete.cases(cbind(output, fixed, flex, id, time,
                                               share))
-  
-  if (length(complete_obs) != length(output)) {
-    stop("'output', 'fixed', 'flex', 'share', 'id', and 'time' cannot contain missing values")
+  if (sum(complete_obs) != length(output)) {
+    output <- output[complete_obs, , drop = FALSE]
+    fixed <- fixed[complete_obs, , drop = FALSE]
+    flex <- flex[complete_obs, , drop = FALSE]
+    id <- id[complete_obs, , drop = FALSE]
+    time <- time[complete_obs, , drop = FALSE]
+    share <- share[complete_obs, , drop = FALSE]
+    warning("'output', 'fixed', 'flex', 'share', 'id', and 'time' contains missing values: observations omitted")
   }
   
   all_input <- cbind(fixed, flex)
-  poly_input <- stats::poly(all_input, degree = degree, raw = TRUE)
+  poly_input <- stats::poly(all_input, degree = ctrl$degree, raw = TRUE)
   input_degrees <- sapply(colnames(poly_input), FUN = function(x) {
     a <- base::strsplit(x, split = "[.]")[[1]]
   })
@@ -67,7 +96,7 @@ gnrflex <- function(output, fixed, flex, share, id, time, degree = 2,
 
   start <- c(constant, (coef(start_reg)[-1]))
   share_reg <- gauss_newton_reg(start = start, data = poly_input,
-                                share = share, control = control)
+                                share = share, control = ctrl)
 
   coef <- share_reg[[1]]
   i_elas <- log(pred_fs(coef, poly_input))
@@ -82,7 +111,7 @@ gnrflex <- function(output, fixed, flex, share, id, time, degree = 2,
   big_Y <- as.matrix(output - errors - integ_G_I)
 
   fs_elas <- list("flex_elas" = i_elas,
-                  "coef" = coef,
+                  "coefficients" = coef,
                   "residuals" = errors,
                   "SSR" = share_reg$SSR,
                   "iterations" = share_reg$iterations,
@@ -94,27 +123,21 @@ gnrflex <- function(output, fixed, flex, share, id, time, degree = 2,
                  "D_coef" = gamma[-1, ] / gamma_denom[-1, ],
                  "id" = id,
                  "time" = time,
-                 "degree" = degree)
+                 "degree" = ctrl$degree)
 
-  fs_return <- list("elas" = fs_elas, "arg" = fs_arg, "control" = control)
+  fs_return <- list("elas" = fs_elas, "arg" = fs_arg, "control" = ctrl)
   class(fs_return) <- "gnrflex"
   return(fs_return)
 }
 
 gauss_newton_reg <- function(start, data, share, control) {
-  ctrl <- gnrflex.control()
-  if (!missing(control)) {
-    control <- as.list(control)
-    ctrl[names(control)] <- control
-  }
-
   iter <- 0
   call_start <- start
 
   inputs_1 <- data.frame(rep(1, nrow(data)), data)
   names(inputs_1)[1] <- "constant"
 
-  while (iter < ctrl$maxit) {
+  while (iter < control$maxit) {
     initial_pred <- pred_fs(call_start, data)
 
     X <- as.matrix(inputs_1 / initial_pred)
@@ -127,8 +150,8 @@ gauss_newton_reg <- function(start, data, share, control) {
     suppressWarnings(new_errors <- cbind(share - log(new_pred)))
     new_SSR <- t(new_errors) %*% new_errors
 
-    initial_step <- ctrl$initial_step
-    min_factor <- ctrl$min_factor
+    initial_step <- control$initial_step
+    min_factor <- control$min_factor
 
     while ((is.na(new_SSR) || new_SSR > initial_SSR)
            & initial_step >= min_factor) {
@@ -142,7 +165,7 @@ gauss_newton_reg <- function(start, data, share, control) {
 
     conv_bool <- TRUE
     for (i in 1:length(new_start)) {
-      if (initial_step * abs(new_start[i]) > ctrl$reltol *
+      if (initial_step * abs(new_start[i]) > control$reltol *
           (abs(new_start[i]) + 1e-3)) {
         conv_bool <- FALSE
         break

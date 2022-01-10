@@ -4,34 +4,40 @@
 \alias{gnriv}
 \title{Estimate fixed input elasticity and total productivity: Gandhi, Navarro, Rivers (GNR) lag instruments}
 \usage{
-gnriv(object, degree, control, ...)
+gnriv(object, control, ...)
 }
 \arguments{
-\item{object}{object of class \code{gnrflex}}
-
-\item{degree}{degree of Markov process for persistent productivity}
+\item{object}{object of class \code{gnrflex}.}
 
 \item{control}{an optional list of convergence settings. See \code{gnriv.control} for listing.}
 
-\item{...}{additional optional arguments passed to optim}
+\item{...}{additional optional arguments passed to optim.}
 }
 \value{
-a list of class "gnriv" containing six elements:
+a list of class "gnriv" containing three elements:
 
-\code{elas}: a numeric matrix of estimated elasticities of fixed inputs for each observation
+\code{fixed_elas}: a numeric matrix of estimated elasticities of fixed inputs for each observation.
 
-\code{productivity}: a numeric vector of estimated total productivity
-
-\code{degree}: degree of Markov process
-
-\code{iterations}: number of iterations performed
-
-\code{convergence}: boolean indicating whether convergence was achieved
+\code{productivity}: a numeric vector of estimated total productivity.
 
 \code{control}: the list of convergence control parameters. See \code{gnriv.control}.
 }
 \description{
-The \code{gnriv} function implements the second stage of the GNR production function estimation routine, nonparametrically identifying the fixed input elasticities of the production function and total productivity. This function is called in the main wrapper function \code{gnrprod}. It currently supports only one flexible input.
+The \code{gnriv} function implements the second stage of the
+GNR production function estimation routine, nonparametrically identifying
+the fixed input elasticities of the production function and total
+productivity. This function accepts an object of class \code{gnrflex}.
 
 For details, see Gandhi, Navarro, and Rivers (2020).
+}
+\examples{
+require(gnrprod)
+data <- colombian
+industry_311_flex <- gnrflex(output = "RGO", fixed = c("L", "K"),
+                             flex = "RI", share = "share", id = "id",
+                             time = "year", data = data,
+                             control = list(degree = 2, maxit = 200))
+
+industry_311_fixed <- gnriv(industry_311_flex,
+                            control = list(trace = 1))
 }

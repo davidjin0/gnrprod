@@ -1,44 +1,75 @@
 #' Estimate fixed input elasticity and total productivity: Gandhi, Navarro, Rivers (GNR) lag instruments
-#' @description The \code{gnriv} function implements the second stage of the GNR production function estimation routine, nonparametrically identifying the fixed input elasticities of the production function and total productivity. This function is called in the main wrapper function \code{gnrprod}. It currently supports only one flexible input.
+#' @description The \code{gnriv} function implements the second stage of the
+#' GNR production function estimation routine, nonparametrically identifying
+#' the fixed input elasticities of the production function and total
+#' productivity. This function accepts an object of class \code{gnrflex}.
 #'
 #' For details, see Gandhi, Navarro, and Rivers (2020).
 #'
 #' @param object object of class \code{gnrflex}.
-#' @param degree degree of Markov process for persistent productivity. Defaults to 2.
 #' @param control an optional list of convergence settings. See \code{gnriv.control} for listing.
 #' @param ... additional optional arguments passed to optim.
-#' @return a list of class "gnriv" containing six elements:
+#' @return a list of class "gnriv" containing three elements:
 #'
-#' \code{pred_elas}: a numeric matrix of estimated elasticities of fixed inputs for each observation.
+#' \code{fixed_elas}: a numeric matrix of estimated elasticities of fixed inputs for each observation.
 #'
 #' \code{productivity}: a numeric vector of estimated total productivity.
 #'
-#' \code{degree}: degree of Markov process.
-#'
-#' \code{iterations}: number of iterations performed.
-#'
-#' \code{convergence}: boolean indicating whether convergence was achieved.
-#'
 #' \code{control}: the list of convergence control parameters. See \code{gnriv.control}.
 #' 
-#' @usage gnriv(object, degree = 2, control, ...)
+#' @usage gnriv(object, control, ...)
 #' 
+#' @examples 
+#' require(gnrprod)
+#' data <- colombian
+#' industry_311_flex <- gnrflex(output = "RGO", fixed = c("L", "K"),
+#'                              flex = "RI", share = "share", id = "id",
+#'                              time = "year", data = data,
+#'                              control = list(degree = 2, maxit = 200))
+#' 
+#' industry_311_fixed <- gnriv(industry_311_flex,
+#'                             control = list(trace = 1))
+#' @importFrom data.table "data.table"
+#' @importFrom data.table ".SD"
+#' @importFrom data.table "shift"
 #' @export
 
 
-gnriv <- function(object, degree = 2, control, ...) {
+gnriv <- function(object, control, ...) {
   if (attr(object, "class") != "gnrflex") {
     stop("object must be of class gnrflex")
   }
+  
+  ctrl <- gnriv.control()
+  if (!missing(control)) {
+    control <- as.list(control)
+    ctrl[names(control)] <- control
+    optim.control <- ctrl[3:length(ctrl)]
+  } else {
+    optim.control <- NULL
+  }
+  
+  degree <- ctrl[[1]]
+  method <- ctrl[[2]]
+  
+  all_input <- object$arg$input
+  input_degree <- object$arg$input_degree
 
-  in_df <- data.frame(rbind(object$arg$input, object$arg$input_degree))
-  pred <- in_df[, in_df[nrow(in_df), ] == 0]
-  pred <- pred[-c((nrow(pred) -
-                     (nrow(object$arg$input_degree) - 1)):(nrow(pred))), ]
-  flex <- in_df[, in_df[nrow(in_df), ] != 0]
-  flex <- flex[-c((nrow(flex) -
-                     (nrow(object$arg$input_degree) - 1)):(nrow(flex))), ]
+  pred <- sapply(1:ncol(input_degree), FUN = function(i) {
+    if (input_degree[nrow(input_degree), i] == 0) {
+      return(all_input[, i, drop = FALSE])
+    }
+  })
+  pred <- do.call(cbind, pred)
 
+  flex <- sapply(1:ncol(input_degree), FUN = function(i) {
+    if ((sum(input_degree[, i]) >= 1) &&
+        input_degree[nrow(input_degree), i] == 1) {
+      return(all_input[, i, drop = FALSE])
+    }
+  })
+  flex <- do.call(cbind, flex)
+  
   id <- object$arg$id
   time <- object$arg$time
   big_Y <- object$arg$big_Y
@@ -46,48 +77,40 @@ gnriv <- function(object, degree = 2, control, ...) {
 
   constant_reg <- stats::lm(big_Y ~ as.matrix(pred))
   coefficients <- stats::coef(constant_reg)[2:(ncol(pred) + 1)]
-
-  ss_df <- data.frame(cbind(id, time, pred, big_Y))
-  ss_df <- lag_gnr(ss_df)
-
-  pred_base <- as.matrix(ss_df[[1]])
-  big_Y_base <- pred_base[, ncol(pred_base)]
-  pred_base <- pred_base[, -c(ncol(pred_base))]
-
-  pred_lag <- as.matrix(ss_df[[2]])
-  big_Y_lag <- pred_lag[, ncol(pred_lag)]
-  pred_lag <- pred_lag[, -c(ncol(pred_lag))]
-
-  ctrl <- gnriv.control()
-  if (!missing(control)) {
-    control <- as.list(control)
-    ctrl[names(control)] <- control
-  }
-  method = ctrl[[1]]
-  ctrl[[1]] = NULL
+  
+  fixed_base <- data.table::data.table(id, time, pred, big_Y)
+  colnames(fixed_base)[1:2] <- c("id", "time")
+  fixed_base <- fixed_base[order(fixed_base$id, fixed_base$time), ]
+  fixed_lag <- fixed_base[, data.table::shift(.SD, n = 1), by = id,
+                          .SDcols = 3:ncol(fixed_base), drop = FALSE]
+  
+  complete_obs <- stats::complete.cases(cbind(fixed_base, fixed_lag))
+  
+  fixed_base <- as.matrix(fixed_base)[complete_obs, -1:-2, drop = FALSE]
+  fixed_lag <- as.matrix(fixed_lag)[complete_obs, -1, drop = FALSE]
+  
+  big_Y_base <- fixed_base[, ncol(fixed_base)]
+  fixed_base <- fixed_base[, -c(ncol(fixed_base))]
+  big_Y_lag <- fixed_lag[, ncol(fixed_lag)]
+  fixed_lag <- fixed_lag[, -c(ncol(fixed_lag))]
 
   constant_gmm <- stats::optim(par = coefficients, fn = constant_moments,
-                               data = pred_base, big_Y_base = big_Y_base,
-                               big_Y_lag = big_Y_lag, lag_data = pred_lag,
+                               data = fixed_base, big_Y_base = big_Y_base,
+                               big_Y_lag = big_Y_lag, lag_data = fixed_lag,
                                degree = degree, method = method,
-                               control = ctrl, ...)
-  
+                               control = optim.control, ...)
+
   opt_ctrl <- list(trace = 0, fnscale = 1,
                    parscale = rep.int(1, length(coefficients)),
                    ndeps = rep.int(1e-3, length(coefficients)),
                    maxit = 100L, abstol = -Inf,
-                   reltol = sqrt(.Machine$double.eps),
-                   alpha = 1.0, beta = 0.5, gamma = 2.0,
-                   REPORT = 10,
-                   type = 1,
-                   lmm = 5, factr = 1e7, pgtol = 0,
-                   tmax = 10, temp = 10.0)
+                   reltol = sqrt(.Machine$double.eps), alpha = 1.0, beta = 0.5,
+                   gamma = 2.0, REPORT = 10, type = 1, lmm = 5, factr = 1e7,
+                   pgtol = 0, tmax = 10, temp = 10.0)
   
-  opt_ctrl[names(ctrl)] <- ctrl[names(ctrl)]
-  C_coef <- constant_gmm$par
+  opt_ctrl[names(optim.control)] <- optim.control
 
-  input_degree <- object$arg$input_degree
-  all_input <- object$arg$input
+  C_coef <- constant_gmm$par
 
   elasticities <- lapply(1:(nrow(input_degree) - 1), FUN = function(i) {
     new_in_deg <- input_degree
@@ -121,12 +144,11 @@ gnriv <- function(object, degree = 2, control, ...) {
   productivity <- as.matrix(exp(logomega + errors))
 
   elasticities <- do.call(cbind, elasticities)
-  ss_return <- list("pred_elas" = elasticities,
+  ss_return <- list("fixed_elas" = elasticities,
                     "productivity" = productivity,
-                    "degree" = degree,
-                    "method" = method,
-                    "opt_info" = constant_gmm,
-                    "control" = opt_ctrl)
+                    "optim_info" = constant_gmm,
+                    "control" = list("degree" = degree, "method" = method,
+                                     "optim_control" = opt_ctrl))
   class(ss_return) <- "gnriv"
   return(ss_return)
 }

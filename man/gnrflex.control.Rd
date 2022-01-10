@@ -5,6 +5,7 @@
 \title{Control iterations in first stage of GNR}
 \usage{
 gnrflex.control(
+  degree = 3,
   maxit = 100,
   reltol = 1e-05,
   initial_step = 100,
@@ -12,17 +13,19 @@ gnrflex.control(
 )
 }
 \arguments{
-\item{maxit}{Maximum number of iterations. Defaults to 100.}
+\item{degree}{degree of share regression polynomial. Defaults to 3.}
 
-\item{reltol}{Relative convergence tolerance. Defaults to 1e-5.}
+\item{maxit}{maximum number of iterations. Defaults to 100.}
 
-\item{initial_step}{A scaling parameter specifying the initial step-size factor used in each iteration of the Gauss-Newton algorithm. \code{initial_step} is halved in each convergence step.}
+\item{reltol}{relative convergence tolerance. Defaults to 1e-5.}
 
-\item{min_factor}{The minimum value that the step-size factor can take on in the convergence step of any iteration of the Gauss-Newton algorithm.}
+\item{initial_step}{a scaling parameter specifying the initial step-size factor used in each iteration of the Gauss-Newton algorithm. \code{initial_step} is halved in each convergence step.}
+
+\item{min_factor}{the minimum value that the step-size factor can take on in the convergence step of any iteration of the Gauss-Newton algorithm.}
 }
 \value{
-a list containing four elements: \code{maxit}, \code{reltol}, \code{initial_step}, and \code{min_factor}
+a list containing five elements: \code{degree}, \code{maxit}, \code{reltol}, \code{initial_step}, and \code{min_factor}.
 }
 \description{
-Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{gnrflex} function
+Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{gnrflex} function.
 }
