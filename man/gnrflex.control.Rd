@@ -2,7 +2,7 @@
 % Please edit documentation in R/gnrflex.control.R
 \name{gnrflex.control}
 \alias{gnrflex.control}
-\title{Control iterations in first stage of GNR}
+\title{Control parameters in \code{gnrflex}}
 \usage{
 gnrflex.control(
   degree = 3,
@@ -27,5 +27,5 @@ gnrflex.control(
 a list containing five elements: \code{degree}, \code{maxit}, \code{reltol}, \code{initial_step}, and \code{min_factor}.
 }
 \description{
-Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{gnrflex} function.
+Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{\link[gnrprod]{gnrflex}} function.
 }

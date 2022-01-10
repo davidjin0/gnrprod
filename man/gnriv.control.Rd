@@ -2,20 +2,20 @@
 % Please edit documentation in R/gnriv.control.R
 \name{gnriv.control}
 \alias{gnriv.control}
-\title{Control iterations in second stage of GNR}
+\title{Control parameters in \code{gnriv}}
 \usage{
 gnriv.control(degree = 3, method = "BFGS", ...)
 }
 \arguments{
 \item{degree}{degree of Markov process for persistent productivity. Defaults to 3.}
 
-\item{method}{the method of optimization passed to optim. Defaults to "BFGS." See optim for listing of available methods.}
+\item{method}{the method of optimization passed to \code{\link[stats]{optim}}. Defaults to "BFGS." See \code{\link[stats]{optim}} under 'Details' for listing of available methods.}
 
-\item{...}{additional optional control parameters passed to optim. See optim for available parameters.}
+\item{...}{additional optional control parameters passed to \code{\link[stats]{optim}}. See \code{\link[stats]{optim}} for available parameters.}
 }
 \value{
 a list containing \code{degree} and \code{method} and any additional parameters in \code{...}.
 }
 \description{
-Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{gnriv} function
+Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{\link[gnrprod]{gnriv}} function
 }

@@ -1,13 +1,15 @@
-#' Estimate fixed input elasticity and total productivity: Gandhi, Navarro, Rivers (GNR) lag instruments
+#' Estimate fixed input elasticity and total productivity: Gandhi, Navarro, Rivers (GNR) lags as instruments; second stage
 #' @description The \code{gnriv} function implements the second stage of the
 #' GNR production function estimation routine, nonparametrically identifying
 #' the fixed input elasticities of the production function and total
-#' productivity. This function accepts an object of class \code{gnrflex}.
+#' productivity. This function accepts an object of class
+#' \code{\link[gnrprod]{gnrflex}}. The parameters are optimized using the
+#' function \code{\link[stats]{optim}}.
 #'
 #' For details, see Gandhi, Navarro, and Rivers (2020).
 #'
-#' @param object object of class \code{gnrflex}.
-#' @param control an optional list of convergence settings. See \code{gnriv.control} for listing.
+#' @param object object of class "\code{\link[gnrprod]{gnrflex}}".
+#' @param control an optional list of convergence settings. See \code{\link[gnrprod]{gnriv.control}} for listing.
 #' @param ... additional optional arguments passed to optim.
 #' @return a list of class "gnriv" containing three elements:
 #'
@@ -15,7 +17,7 @@
 #'
 #' \code{productivity}: a numeric vector of estimated total productivity.
 #'
-#' \code{control}: the list of convergence control parameters. See \code{gnriv.control}.
+#' \code{control}: the list of convergence control parameters. See \code{\link[gnrprod]{gnriv.control}} for available parameters.
 #' 
 #' @usage gnriv(object, control, ...)
 #' 
@@ -32,6 +34,7 @@
 #' @importFrom data.table "data.table"
 #' @importFrom data.table ".SD"
 #' @importFrom data.table "shift"
+#' @references Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." *Journal of Political Economy*, 128(8): 2973-3016. \url{https://doi.org/10.1086/707736}.
 #' @export
 
 
@@ -44,9 +47,12 @@ gnriv <- function(object, control, ...) {
   if (!missing(control)) {
     control <- as.list(control)
     ctrl[names(control)] <- control
-    optim.control <- ctrl[3:length(ctrl)]
-  } else {
-    optim.control <- NULL
+    
+    if (length(ctrl) == 2) {
+      optim.control <- NULL
+    } else {
+      optim.control <- ctrl[3:length(ctrl)]
+    }
   }
   
   degree <- ctrl[[1]]

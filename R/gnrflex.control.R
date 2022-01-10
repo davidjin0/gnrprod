@@ -1,5 +1,5 @@
-#' Control iterations in first stage of GNR
-#' @description Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{gnrflex} function.
+#' Control parameters in \code{gnrflex}
+#' @description Allows the user to modify convergence parameters of Gauss Newton algorithm used in the \code{\link[gnrprod]{gnrflex}} function.
 #'
 #' @param degree degree of share regression polynomial. Defaults to 3.
 #' @param maxit maximum number of iterations. Defaults to 100.

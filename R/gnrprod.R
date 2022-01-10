@@ -1,9 +1,9 @@
 #' Estimate production functions and productivity: Gandhi, Navarro, and Rivers (2020)
 #' @description The \code{gnrprod} function is the front end of the
 #' \code{gnrprod} package. It estimates production functions and productivity
-#' in two stages: \code{gnrflex} (estimate flexible input elasticity) and
-#' \code{gnriv} (estimate fixed input elasticities and productivity). It
-#' accepts the names of function inputs with a dataframe or matrices/vectors
+#' in two stages: \code{\link[gnrprod]{gnrflex}} (estimate flexible input elasticity) and
+#' \code{\link[gnrprod]{gnriv}} (estimate fixed input elasticities and productivity). It
+#' accepts the names of function inputs with a \code{\link[base]{data.frame}} or matrices/vectors
 #' directly. \code{gnrprod} currently supports only one flexible input.
 #'
 #' @param output name (character) of variable of log gross output in data or a numeric vector.
@@ -12,32 +12,32 @@
 #' @param share name (character) of variable of log intermediate input's revenue share in data or a numeric vector.
 #' @param in_price optional (required if \code{share} is not specified) name (character) of variable of common flexible input price or a numeric vector.
 #' @param out_price optional (required if \code{share} is not specified) name (character) of variable of common output price or a numeric vector.
-#' @param id name (character) of variable of firm id in data or a numeric vector.
+#' @param id name (character) of variable of firm ID in data or a numeric vector.
 #' @param time name (character) of variable of time in data or a numeric vector.
-#' @param data dataframe containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix rather than strings).
+#' @param data \code{\link[base]{data.frame}} containing all variables with names specified by arguments above (left empty if arguments above are vector/matrix rather than strings).
 #' @param B number of bootstrap repetitions to retrieve standard errors of elasticity estimates. By default, \code{gnrprod} does not bootstrap, i.e., \code{B = NULL}. Setting \code{B > 1} will output bootstrapped standard errors. 
-#' @param fs_control an optional list of convergence settings of the first stage. See \code{gnrflex.control} for listing.
-#' @param ss_control an optional list of convergence settings of the second stage. See \code{gnriv.control} for listing.
-#' @param ... additional optional arguments to be passed to optim in the second stage.
+#' @param fs_control an optional list of convergence settings of the first stage. See \code{\link[gnrprod]{gnrflex.control}} for listing.
+#' @param ss_control an optional list of convergence settings of the second stage. See \code{\link[gnrprod]{gnriv.control}} for listing.
+#' @param ... additional optional arguments to be passed to \code{\link[stats]{optim}} in the second stage.
 #' @return a list of class "gnr" with five elements:
 #' \code{estimates}: a list with two elements: \code{elas} the parameter estimates and \code{std_errors} the standard errors.
 #'
-#' \code{data}: a list (S3: `dataframe`) containing:\code{output}, \code{fixed}, \code{flex}, \code{share}, \code{id}, \code{time}, estimated elasticities for each observation, estimated productivity, and first stage residuals.
+#' \code{data}: a \code{\link[base]{data.frame}} containing: \code{output}, \code{fixed}, \code{flex}, \code{share}, \code{id}, \code{time}, estimated elasticities for each observation, estimated productivity, and first stage residuals.
 #'
 #' \code{first_stage}: a list containing five elements describing the share regression (first stage):
 #' \itemize{
-#'  \item{\code{coefficients}}{: a numeric vector of the coefficients of the first stage estimator scaled by a constant (equation (21)).}
+#'  \item{\code{coefficients}}{: a numeric vector of the coefficients of the first stage estimator scaled by a constant. See Gandhi, Navarro, and Rivers (2020, p. 1994, equation (21)).}
 #'  \item{\code{SSR}}{: sum of squared residual.}
 #'  \item{\code{iterations}}{: number of iterations performed.}
 #'  \item{\code{convergence}}{: boolean indicating whether convergence was achieved.}
-#'  \item{\code{control}}{: list of convergence control parameters (see \code{gnrflex.control}).}
+#'  \item{\code{control}}{: list of convergence control parameters (see \code{\link[gnrprod]{gnrflex.control}}).}
 #' }
 #'
 #' \code{second_stage}: a list containing four elements describing the second stage:
 #' \itemize{
-#'  \item{\code{optim_method}}{: the method for optimization. Defaults to 'BFGS'.}
-#'  \item{\code{optim_info}}{: the returned list of the optim function estimating the coefficients of the constant of integration (equation (22)). See optim.}
-#'  \item{\code{optim_control}}{: the list of control parameters passed to optim. See optim.}
+#'  \item{\code{optim_method}}{: the method for optimization. Defaults to 'BFGS'. See \code{\link[stats]{optim}} for a listing of available methods.}
+#'  \item{\code{optim_info}}{: the returned list of the \code{\link[stats]{optim}} function estimating the coefficients of the constant of integration. See Gandhi, Navarro, and Rivers (2020, p. 1994, equation (21)).}
+#'  \item{\code{optim_control}}{: the list of control parameters passed to \code{\link[stats]{optim}}.}
 #'  \item{\code{degree}}{: degree of Markov process for persistent productivity.}
 #' }
 #' 
@@ -57,7 +57,7 @@
 #'                         fs_control = list(degree = 2, maxit = 200),
 #'                         ss_control = list(trace = 1))
 #'                         
-#' @references Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." *Journal of Political Economy*, 128(8): 2973-3016. https://doi.org/10.1086/707736.
+#' @references Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." *Journal of Political Economy*, 128(8): 2973-3016. \url{https://doi.org/10.1086/707736}.
 #' @export
 
 gnrprod <- function(output, fixed, flex, share, in_price = NULL,
@@ -113,7 +113,7 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
                       control = fs_control)
 
   gnr_iv <- gnriv(object = gnr_flex, control = ss_control, ...)
-  
+
   boot_sd <- NULL
   if (!missing(B) && B > 1) {
     id_unique <- unique(id)

@@ -2,14 +2,14 @@
 % Please edit documentation in R/gnriv.R
 \name{gnriv}
 \alias{gnriv}
-\title{Estimate fixed input elasticity and total productivity: Gandhi, Navarro, Rivers (GNR) lag instruments}
+\title{Estimate fixed input elasticity and total productivity: Gandhi, Navarro, Rivers (GNR) lags as instruments; second stage}
 \usage{
 gnriv(object, control, ...)
 }
 \arguments{
-\item{object}{object of class \code{gnrflex}.}
+\item{object}{object of class "\code{\link[gnrprod]{gnrflex}}".}
 
-\item{control}{an optional list of convergence settings. See \code{gnriv.control} for listing.}
+\item{control}{an optional list of convergence settings. See \code{\link[gnrprod]{gnriv.control}} for listing.}
 
 \item{...}{additional optional arguments passed to optim.}
 }
@@ -20,13 +20,15 @@ a list of class "gnriv" containing three elements:
 
 \code{productivity}: a numeric vector of estimated total productivity.
 
-\code{control}: the list of convergence control parameters. See \code{gnriv.control}.
+\code{control}: the list of convergence control parameters. See \code{\link[gnrprod]{gnriv.control}} for available parameters.
 }
 \description{
 The \code{gnriv} function implements the second stage of the
 GNR production function estimation routine, nonparametrically identifying
 the fixed input elasticities of the production function and total
-productivity. This function accepts an object of class \code{gnrflex}.
+productivity. This function accepts an object of class
+\code{\link[gnrprod]{gnrflex}}. The parameters are optimized using the
+function \code{\link[stats]{optim}}.
 
 For details, see Gandhi, Navarro, and Rivers (2020).
 }
@@ -40,4 +42,7 @@ industry_311_flex <- gnrflex(output = "RGO", fixed = c("L", "K"),
 
 industry_311_fixed <- gnriv(industry_311_flex,
                             control = list(trace = 1))
+}
+\references{
+Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." \emph{Journal of Political Economy}, 128(8): 2973-3016. \url{https://doi.org/10.1086/707736}.
 }

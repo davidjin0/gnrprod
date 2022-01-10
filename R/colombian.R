@@ -1,9 +1,8 @@
-#' Colombian
+#' Colombian plant-level production data
 #'
-#' Plant-level production data for the food products industry (International Standard Industrial Classification code 311) in Colombia.
+#' @description Plant-level production data for the food products industry (International Standard Industrial Classification code 311) in Colombia.
 #'
 #' @format A data frame with seven variables:
-#'
 #' \describe{
 #' \item{\code{share}}{log intermediate input's revenue share}
 #' \item{\code{id}}{firm id}
@@ -14,5 +13,7 @@
 #' \item{\code{RI}}{log real intermediate inputs with base year 1981}
 #' }
 #'
-#' For a complete listing of data, see \url{https://www.journals.uchicago.edu/doi/suppl/10.1086/707736}
+#' For a complete listing of data, see \url{https://www.journals.uchicago.edu/doi/suppl/10.1086/707736}.
+#' 
+#' @references Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." *Journal of Political Economy*, 128(8): 2973-3016. \url{https://doi.org/10.1086/707736}.
 "colombian"
