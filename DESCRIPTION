@@ -1,6 +1,6 @@
 Package: gnrprod
 Title: Estimates Gross Output Functions
-Version: 0.0.9000
+Version: 1.0.0
 Authors@R: 
     person(given = "David",
            family = "Jin",
