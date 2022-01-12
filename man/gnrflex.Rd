@@ -73,7 +73,7 @@ industry_311_flex <- gnrflex(output = "RGO", fixed = c("L", "K"),
                              control = list(degree = 2, maxit = 200))
 }
 \references{
-Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." \emph{Journal of Political Economy}, 128(8): 2973-3016. \url{https://doi.org/10.1086/707736}.
+Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." \emph{Journal of Political Economy}, 128(8): 2973-3016. \doi{10.1086/707736}.
 
 Davidson, Russell, James G. MacKinnon. 1993. "The Gauss-Newton Regression." In \emph{Estimation and Inference in Econometrics}, 176-207. New York: Oxford University Press.
 }

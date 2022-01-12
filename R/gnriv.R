@@ -33,7 +33,7 @@
 #' @importFrom data.table "data.table"
 #' @importFrom data.table ".SD"
 #' @importFrom data.table "shift"
-#' @references Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." *Journal of Political Economy*, 128(8): 2973-3016. \url{https://doi.org/10.1086/707736}.
+#' @references Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." *Journal of Political Economy*, 128(8): 2973-3016. \doi{10.1086/707736}.
 #' @export
 
 

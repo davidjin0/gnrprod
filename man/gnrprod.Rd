@@ -82,5 +82,5 @@ industry_311 <- gnrprod(output = "RGO", fixed = c("L", "K"),
                         
 }
 \references{
-Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." \emph{Journal of Political Economy}, 128(8): 2973-3016. \url{https://doi.org/10.1086/707736}.
+Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." \emph{Journal of Political Economy}, 128(8): 2973-3016. \doi{10.1086/707736}.
 }

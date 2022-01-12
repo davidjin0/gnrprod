@@ -16,7 +16,7 @@ A data frame with seven variables:
 \item{\code{RI}}{log real intermediate inputs with base year 1981}
 }
 
-For a complete listing of data, see \url{https://www.journals.uchicago.edu/doi/suppl/10.1086/707736}.
+For a complete listing of data, see \doi{10.1086/707736}.
 }
 \usage{
 colombian
@@ -25,6 +25,6 @@ colombian
 Plant-level production data for the food products industry (International Standard Industrial Classification code 311) in Colombia.
 }
 \references{
-Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." \emph{Journal of Political Economy}, 128(8): 2973-3016. \url{https://doi.org/10.1086/707736}.
+Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." \emph{Journal of Political Economy}, 128(8): 2973-3016. \doi{10.1086/707736}.
 }
 \keyword{datasets}
