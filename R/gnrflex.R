@@ -106,19 +106,22 @@ gnrflex <- function(output, fixed, flex, share, id, time, data, control) {
   coef <- share_reg[[1]]
   i_elas <- log(pred_fs(coef, poly_input))
   errors <- i_elas - share
+  colnames(errors) <- "fs_residuals"
   mean_exp_err <- mean(exp(errors))
   i_elas <- exp(i_elas - log(mean_exp_err))
+  colnames(i_elas) <- colnames(flex)
   gamma <- as.matrix(coef / mean_exp_err)
   flex_gamma <- gamma / gamma_denom
 
   integ_G_I <- pred_fs(flex_gamma, poly_input)
   integ_G_I <- integ_G_I * flex
   big_Y <- as.matrix(output - errors - integ_G_I)
+  colnames(big_Y) <- "big_Y"
 
   fs_elas <- list("flex_elas" = i_elas,
                   "coefficients" = coef,
                   "residuals" = errors,
-                  "SSR" = share_reg$SSR,
+                  "SSR" = c(share_reg$SSR),
                   "iterations" = share_reg$iterations,
                   "convergence" = share_reg$convergence)
 

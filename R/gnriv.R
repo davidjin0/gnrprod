@@ -84,6 +84,7 @@ gnriv <- function(object, control, ...) {
 
   constant_reg <- stats::lm(big_Y ~ as.matrix(pred))
   coefficients <- stats::coef(constant_reg)[2:(ncol(pred) + 1)]
+  names(coefficients) <- colnames(pred)
   
   fixed_base <- data.table::data.table(id, time, pred, big_Y)
   colnames(fixed_base)[1:2] <- c("id", "time")

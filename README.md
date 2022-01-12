@@ -56,9 +56,9 @@ gnr_fit
 #> 0.2332 0.1124 0.6793
 summary(gnr_fit)
 #> Gross Output Function:
-#>   output: RGO
-#>   fixed inputs:  L, K 
-#>   flexible inputs: RI
+#>   output: "RGO"
+#>   fixed inputs:  c("L", "K") 
+#>   flexible inputs: "RI"
 #>   data: data
 #> 
 #> Total Productivity:
@@ -85,7 +85,7 @@ gnr_fs <- gnrflex(output = "RGO", fixed = c("L", "K"), flex = "RI",
 # print estimate
 gnr_fs
 #> Flexible Input Elasticity:
-#>  share 
+#>     RI 
 #> 0.6793 
 #> 
 #> First-Stage Sum of Squared Residuals: 315.1547

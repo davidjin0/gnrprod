@@ -121,9 +121,9 @@ summary.gnr <- function(object, ...) {
 print.summary.gnr <- function(x, digits = max(3L, getOption("digits") - 3L),
                               ...) {
   cat("Gross Output Function:\n")
-  cat("  output: ", x$output_name, "\n", sep = "")
-  cat("  fixed inputs: ", paste(x$fixed_names, sep = "", collapse = ", "), "\n")
-  cat("  flexible inputs: ", x$flex_name, "\n", sep = "")
+  cat("  output: ", deparse(x$output_name), "\n", sep = "")
+  cat("  fixed inputs: ", paste(deparse(x$fixed_names), sep = "", collapse = ", "), "\n")
+  cat("  flexible inputs: ", deparse(x$flex_name), "\n", sep = "")
   if (!is.null(x$data_name)) {
     cat("  data: ", x$data_name, "\n", sep = "")
   }
