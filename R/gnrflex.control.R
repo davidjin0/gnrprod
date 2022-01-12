@@ -7,7 +7,10 @@
 #' @param initial_step a scaling parameter specifying the initial step-size factor used in each iteration of the Gauss-Newton algorithm. \code{initial_step} is halved in each convergence step.
 #' @param min_factor the minimum value that the step-size factor can take on in the convergence step of any iteration of the Gauss-Newton algorithm.
 #' @return a list containing five elements: \code{degree}, \code{maxit}, \code{reltol}, \code{initial_step}, and \code{min_factor}.
-#'
+#' 
+#' @usage gnrflex.control(degree = 3, maxit = 100, reltol = 1e-5,
+#'                        initial_step = 100, min_factor = 1e-5)
+#' 
 #' @export
 
 gnrflex.control <- function(degree = 3, maxit = 100, reltol = 1e-5,

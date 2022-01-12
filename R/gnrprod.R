@@ -2,9 +2,11 @@
 #' @description The \code{gnrprod} function is the front end of the
 #' \code{gnrprod} package. It estimates production functions and productivity
 #' in two stages: \code{\link[gnrprod]{gnrflex}} (estimate flexible input elasticity) and
-#' \code{\link[gnrprod]{gnriv}} (estimate fixed input elasticities and productivity). It
-#' accepts the names of function inputs with a \code{\link[base]{data.frame}} or matrices/vectors
-#' directly. \code{gnrprod} currently supports only one flexible input.
+#' \code{\link[gnrprod]{gnriv}} (estimate fixed input elasticities and productivity).
+#' If the production-related inputs are characters, a \code{\link[base]{data.frame}}
+#' must be specified under \code{data}. Alternatively, matrices/vectors may be
+#' directly specified without specifying \code{data}. \code{gnrprod} currently
+#' supports only one flexible input.
 #'
 #' @param output name (character) of variable of log gross output in data or a numeric vector.
 #' @param fixed name (character or character vector) of variables of log fixed inputs in data or a numeric matrix.
@@ -19,7 +21,8 @@
 #' @param fs_control an optional list of convergence settings of the first stage. See \code{\link[gnrprod]{gnrflex.control}} for listing.
 #' @param ss_control an optional list of convergence settings of the second stage. See \code{\link[gnrprod]{gnriv.control}} for listing.
 #' @param ... additional optional arguments to be passed to \code{\link[stats]{optim}} in the second stage.
-#' @return a list of class "gnr" with five elements:
+#' @return a list of class 'gnr' with five elements:
+#' 
 #' \code{estimates}: a list with two elements: \code{elas} the parameter estimates and \code{std_errors} the standard errors.
 #'
 #' \code{data}: a \code{\link[base]{data.frame}} containing: \code{output}, \code{fixed}, \code{flex}, \code{share}, \code{id}, \code{time}, estimated elasticities for each observation, estimated productivity, and first stage residuals.
@@ -42,7 +45,6 @@
 #' }
 #' 
 #' \code{call}: the function call.
-#' 
 #'
 #' @usage gnrprod(output, fixed, flex, share, in_price = NULL,
 #'                out_price = NULL, id, time, data, B = NULL,
@@ -153,7 +155,6 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
   flex_elas <- gnr_flex$elas$flex_elas
   elas <- data.frame(cbind(fixed_elas, flex_elas))
   input_names <- c(colnames(fixed), colnames(flex))
-  input_names <- paste(input_names, "elasticity", sep = "_")
   colnames(elas) <- input_names
   mf <- cbind(mf, elas, gnr_iv$productivity, gnr_flex$elas$residuals)
   colnames(mf)[(ncol(mf) - 1):ncol(mf)] <- c("productivity", "flex_resid")
@@ -165,12 +166,11 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
                     "control" = gnr_flex$control)
 
   ss_return <- list("optim_method" = gnr_iv$control$method,
-                    "optim_info" = gnr_iv$opt_info,
+                    "optim_info" = gnr_iv$optim_info,
                     "optim_control" = gnr_iv$control$optim_control,
                     "degree" = gnr_iv$control$degree)
 
   return_average_elas <- apply(elas, MARGIN = 2, FUN = mean)
-  names(return_average_elas) <- paste(input_names, "avg", sep = "_")
   
   return_sd <- boot_sd
   if (!is.null(boot_sd)) {

@@ -7,14 +7,14 @@
 gnriv(object, control, ...)
 }
 \arguments{
-\item{object}{object of class "\code{\link[gnrprod]{gnrflex}}".}
+\item{object}{object of class 'gnrflex'.}
 
 \item{control}{an optional list of convergence settings. See \code{\link[gnrprod]{gnriv.control}} for listing.}
 
 \item{...}{additional optional arguments passed to optim.}
 }
 \value{
-a list of class "gnriv" containing three elements:
+a list of class 'gnriv' containing three elements:
 
 \code{fixed_elas}: a numeric matrix of estimated elasticities of fixed inputs for each observation.
 
@@ -26,9 +26,8 @@ a list of class "gnriv" containing three elements:
 The \code{gnriv} function implements the second stage of the
 GNR production function estimation routine, nonparametrically identifying
 the fixed input elasticities of the production function and total
-productivity. This function accepts an object of class
-\code{\link[gnrprod]{gnrflex}}. The parameters are optimized using the
-function \code{\link[stats]{optim}}.
+productivity. This function accepts an object of class 'gnrflex'. The
+parameters are optimized using the function \code{\link[stats]{optim}}.
 
 For details, see Gandhi, Navarro, and Rivers (2020).
 }

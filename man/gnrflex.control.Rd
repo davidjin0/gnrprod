@@ -4,13 +4,8 @@
 \alias{gnrflex.control}
 \title{Control parameters in \code{gnrflex}}
 \usage{
-gnrflex.control(
-  degree = 3,
-  maxit = 100,
-  reltol = 1e-05,
-  initial_step = 100,
-  min_factor = 1e-05
-)
+gnrflex.control(degree = 3, maxit = 100, reltol = 1e-5,
+                       initial_step = 100, min_factor = 1e-5)
 }
 \arguments{
 \item{degree}{degree of share regression polynomial. Defaults to 3.}

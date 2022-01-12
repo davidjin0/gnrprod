@@ -2,16 +2,15 @@
 #' @description The \code{gnriv} function implements the second stage of the
 #' GNR production function estimation routine, nonparametrically identifying
 #' the fixed input elasticities of the production function and total
-#' productivity. This function accepts an object of class
-#' \code{\link[gnrprod]{gnrflex}}. The parameters are optimized using the
-#' function \code{\link[stats]{optim}}.
+#' productivity. This function accepts an object of class 'gnrflex'. The
+#' parameters are optimized using the function \code{\link[stats]{optim}}.
 #'
 #' For details, see Gandhi, Navarro, and Rivers (2020).
 #'
-#' @param object object of class "\code{\link[gnrprod]{gnrflex}}".
+#' @param object object of class 'gnrflex'.
 #' @param control an optional list of convergence settings. See \code{\link[gnrprod]{gnriv.control}} for listing.
 #' @param ... additional optional arguments passed to optim.
-#' @return a list of class "gnriv" containing three elements:
+#' @return a list of class 'gnriv' containing three elements:
 #'
 #' \code{fixed_elas}: a numeric matrix of estimated elasticities of fixed inputs for each observation.
 #'
@@ -75,7 +74,7 @@ gnriv <- function(object, control, ...) {
     }
   })
   flex <- do.call(cbind, flex)
-  
+
   id <- object$arg$id
   time <- object$arg$time
   big_Y <- object$arg$big_Y
@@ -150,6 +149,8 @@ gnriv <- function(object, control, ...) {
   productivity <- as.matrix(exp(logomega + errors))
 
   elasticities <- do.call(cbind, elasticities)
+  colnames(elasticities) <- object$arg$fixed_names
+  colnames(productivity) <- "productivity"
   ss_return <- list("fixed_elas" = elasticities,
                     "productivity" = productivity,
                     "optim_info" = constant_gmm,

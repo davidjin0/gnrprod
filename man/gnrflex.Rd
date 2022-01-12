@@ -24,10 +24,9 @@ gnrflex(output, fixed, flex, share, id, time, data, control)
 \item{control}{an optional list of convergence settings. See \code{\link[gnrprod]{gnrflex.control}} for listing.}
 }
 \value{
-a list of class "gnrflex" containing three elements:
+a list of class 'gnrflex' containing three elements:
 
 \code{elas}: a list containing six elements describing the share regression:
-
 \itemize{
 \item{\code{flex_elas}}{: a numeric vector of the estimated flexible input elasticity for each observation.}
 \item{\code{coefficients}}{: a numeric vector of the coefficients of the estimator scaled by a constant. See Gandhi, Navarro, and Rivers (2020, p. 2994, equation (21)).}
@@ -37,7 +36,7 @@ a list of class "gnrflex" containing three elements:
 \item{\code{convergence}}{: boolean indicating whether convergence was achieved.}
 }
 
-\code{arg}: a list containing seven elements to be passed to the second stage function \code{\link[gnrprod]{gnriv}}:
+\code{arg}: a list containing eight elements to be passed to the second stage function \code{\link[gnrprod]{gnriv}}:
 \itemize{
 \item{\code{input}}{: a numeric matrix (S3: \code{\link[stats]{poly}}) of the polynomial expansion of all inputs.}
 \item{\code{input_degree}}{: a numeric matrix corresponding to \code{input} denoting each vector's degree.}
@@ -46,6 +45,7 @@ a list of class "gnrflex" containing three elements:
 \item{\code{id}}{: a numeric vector of the firm ids.}
 \item{\code{time}}{: a numeric vector of time.}
 \item{\code{degree}}{: the degree of the share regression.}
+\item{\code{fixed_names}}{: the names of fixed inputs. To be used in the second stage.}
 }
 
 \code{control}: the list of convergence control parameters. See \code{\link[gnrprod]{gnrflex.control}} for available parameters.
@@ -55,10 +55,12 @@ The \code{gnrflex} function implements the first stage (share
 regression) of the GNR production function estimation routine,
 nonparametrically identifying the flexible input elasticity of the
 production function. This function is called within the main wrapper
-function \code{\link[gnrprod]{gnrprod}}. It accepts the names of function
-inputs with a \code{\link[base]{data.frame}} or matrices/vectors directly.
-The parameters are optimized using the Gauss-Newton algorithm.
-\code{gnrflex} currently supports only one flexible input.
+function \code{\link[gnrprod]{gnrprod}}. If the production-related inputs
+are characters, a \code{\link[base]{data.frame}} must be specified under
+\code{data}. Alternatively, matrices/vectors may be directly specified
+without specifying \code{data}. \code{gnrprod} currently supports only one
+flexible input. The parameters are optimized using the Gauss-Newton
+algorithm. \code{gnrflex} currently supports only one flexible input.
 
 For details, see Gandhi, Navarro, and Rivers (2020).
 }
@@ -72,4 +74,6 @@ industry_311_flex <- gnrflex(output = "RGO", fixed = c("L", "K"),
 }
 \references{
 Gandhi, Amit, Salvador Navarro, and David Rivers. 2020. "On the Identification of Gross Output Production Functions." \emph{Journal of Political Economy}, 128(8): 2973-3016. \url{https://doi.org/10.1086/707736}.
+
+Davidson, Russell, James G. MacKinnon. 1993. "The Gauss-Newton Regression." In \emph{Estimation and Inference in Econometrics}, 176-207. New York: Oxford University Press.
 }

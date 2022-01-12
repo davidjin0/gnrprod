@@ -36,7 +36,8 @@ gnrprod(output, fixed, flex, share, in_price = NULL,
 \item{...}{additional optional arguments to be passed to \code{\link[stats]{optim}} in the second stage.}
 }
 \value{
-a list of class "gnr" with five elements:
+a list of class 'gnr' with five elements:
+
 \code{estimates}: a list with two elements: \code{elas} the parameter estimates and \code{std_errors} the standard errors.
 
 \code{data}: a \code{\link[base]{data.frame}} containing: \code{output}, \code{fixed}, \code{flex}, \code{share}, \code{id}, \code{time}, estimated elasticities for each observation, estimated productivity, and first stage residuals.
@@ -64,9 +65,11 @@ a list of class "gnr" with five elements:
 The \code{gnrprod} function is the front end of the
 \code{gnrprod} package. It estimates production functions and productivity
 in two stages: \code{\link[gnrprod]{gnrflex}} (estimate flexible input elasticity) and
-\code{\link[gnrprod]{gnriv}} (estimate fixed input elasticities and productivity). It
-accepts the names of function inputs with a \code{\link[base]{data.frame}} or matrices/vectors
-directly. \code{gnrprod} currently supports only one flexible input.
+\code{\link[gnrprod]{gnriv}} (estimate fixed input elasticities and productivity).
+If the production-related inputs are characters, a \code{\link[base]{data.frame}}
+must be specified under \code{data}. Alternatively, matrices/vectors may be
+directly specified without specifying \code{data}. \code{gnrprod} currently
+supports only one flexible input.
 }
 \examples{
 require(gnrprod)
