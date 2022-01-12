@@ -52,6 +52,8 @@ gnriv <- function(object, control, ...) {
     } else {
       optim.control <- ctrl[3:length(ctrl)]
     }
+  } else {
+    optim.control <- NULL
   }
   
   degree <- ctrl[[1]]

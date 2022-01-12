@@ -26,8 +26,8 @@ library(gnrprod)
 This package features three main functions: `gnrprod`, `gnrflex`, and
 `gnriv`. `gnrprod` performs the entire production function estimation
 routine. `gnrflex` performs the first stage of the estimation routine
-which returns the flexible input elasticity. `gnrflex` performs the
-second stage of the estimation routine which returns the fixed input
+which returns the flexible input elasticity. `gnriv` performs the second
+stage of the estimation routine which returns the fixed input
 elasticities and productivity.
 
 An example of the use of `gnrprod`:
@@ -44,8 +44,35 @@ gnr_fit <- gnrprod(output = "RGO", fixed = c("L", "K"), flex = "RI",
                    share = "share", id = "id", time = "year", data = data)
 
 # print results
-# gnr_fit
-# summary(gnr_fit)
+gnr_fit
+#> Gross Output Function:
+#>   output:  "RGO" 
+#>   fixed inputs:  c("L", "K") 
+#>   flexible inputs:  "RI" 
+#>   data: data
+#> 
+#> Estimates:
+#>      L      K     RI 
+#> 0.2332 0.1124 0.6793
+summary(gnr_fit)
+#> Gross Output Function:
+#>   output: RGO
+#>   fixed inputs:  L, K 
+#>   flexible inputs: RI
+#>   data: data
+#> 
+#> Total Productivity:
+#>     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+#>   0.1416  12.5365  14.1472  14.8638  16.0179 539.9703 
+#> 
+#> Estimates:
+#>    Estimate
+#> L     0.233
+#> K     0.112
+#> RI    0.679
+#> 
+#> First-Stage Convergence: TRUE with 22 iterations. Sum of Squared Residuals: 315.1547 
+#> Second-Stage Convergence: TRUE with 75 iterations. Value: 0.002222362
 ```
 
 Alternatively, one can use `gnrflex` and `gnriv`:
@@ -56,13 +83,34 @@ gnr_fs <- gnrflex(output = "RGO", fixed = c("L", "K"), flex = "RI",
                   share = "share", id = "id", time = "year", data = data)
 
 # print estimate
-# gnr_fs
+gnr_fs
+#> Flexible Input Elasticity:
+#>  share 
+#> 0.6793 
+#> 
+#> First-Stage Sum of Squared Residuals: 315.1547
+#> Convergence: TRUE
 
-# estimate second stage
+# estimate fixed input elasticities and productivity (second stage)
 gnr_ss <- gnriv(object = gnr_fs)
 
 # print estimates
-# gnr_ss
+gnr_ss
+#> Fixed Input Elasticity:
+#>      L      K 
+#> 0.2332 0.1124 
+#> 
+#> Total Productivity:
+#>   productivity     
+#>  Min.   :  0.1416  
+#>  1st Qu.: 12.5365  
+#>  Median : 14.1472  
+#>  Mean   : 14.8638  
+#>  3rd Qu.: 16.0179  
+#>  Max.   :539.9703  
+#> 
+#> Second-Stage Objective Function Value: 0.002222362
+#> Convergence:  TRUE
 ```
 
 ## References
