@@ -13,6 +13,9 @@
 
 \item{...}{currently not used.}
 }
+\value{
+\code{print.gnriv} has no return value and only prints a brief overview of elements contained in an object of class 'gnriv' as described in the description.
+}
 \description{
-Print estimates of the fixed input elasticities and productivity from \code{\link[gnrprod]{gnriv}}
+Print estimates of the fixed input elasticities, productivity, objective function value, and convergence status from \code{\link[gnrprod]{gnriv}}.
 }

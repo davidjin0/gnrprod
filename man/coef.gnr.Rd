@@ -11,6 +11,9 @@
 
 \item{...}{currently not used.}
 }
+\value{
+the named vector of parameter estimates contained in an object of class 'gnr'.
+}
 \description{
-Print or return a numeric matrix of the estimated parameters from an object of class 'gnrprod'.
+Print or return a numeric matrix of the estimated parameters from an object of class 'gnr'.
 }

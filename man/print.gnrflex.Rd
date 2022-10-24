@@ -13,6 +13,9 @@
 
 \item{...}{currently not used.}
 }
+\value{
+\code{print.gnrflex} has no return value and only prints a brief overview of elements contained in an object of class 'gnrflex' as described in the description.
+}
 \description{
-Print estimate of the flexible input elasticity from \code{\link[gnrprod]{gnrflex}}
+Print estimate of the flexible input elasticity, the sum of squared residuals, and convergence status from \code{\link[gnrprod]{gnrflex}}.
 }

@@ -1,10 +1,10 @@
 #' Printing gross output function estimates
-#' @description Print estimates of the parameters in a gross output function from \code{\link[gnrprod]{gnrprod}}.
+#' @description Print estimates of the parameters in a gross output function and names of the output, input, and data from \code{\link[gnrprod]{gnrprod}}.
 #' 
 #' @param x an object of class 'gnr'.
 #' @param digits the number of significant figures to use for printing.
 #' @param ... currently not used.
-#' 
+#' @return \code{print.gnr} has no return value and only prints a brief overview of elements contained in an object of class 'gnr' as described in the description.
 #' @usage 
 #' \method{print}{gnr}(x, digits = max(3L, getOption("digits") - 3L), ...)
 #' @export
@@ -115,6 +115,8 @@ summary.gnr <- function(object, ...) {
 #' @param digits the number of significant figures to use for printing.
 #' @param ... currently not used.
 #' 
+#' @return \code{print.gnr} has no return value and only prints the elements contained in an object of class 'summary.gnr' as described in the description.
+#' 
 #' @usage 
 #' \method{print}{summary.gnr}(x, digits = max(3L, getOption("digits") - 3L), ...)
 #' @export
@@ -143,10 +145,13 @@ print.summary.gnr <- function(x, digits = max(3L, getOption("digits") - 3L),
 }
 
 #' Print gross output function estimates
-#' @description Print or return a numeric matrix of the estimated parameters from an object of class 'gnrprod'.
+#' @description Print or return a numeric matrix of the estimated parameters from an object of class 'gnr'.
 #' 
 #' @param object an object of class 'gnr'.
 #' @param ... currently not used.
+#' 
+#' @return the named vector of parameter estimates contained in an object of class 'gnr'.
+#' 
 #' @usage 
 #' \method{coef}{gnr}(object, ...)
 #' @export
@@ -154,11 +159,13 @@ coef.gnr <- function(object, ...) object$estimates$elas
 
 
 #' Printing first stage estimate
-#' @description Print estimate of the flexible input elasticity from \code{\link[gnrprod]{gnrflex}}
+#' @description Print estimate of the flexible input elasticity, the sum of squared residuals, and convergence status from \code{\link[gnrprod]{gnrflex}}.
 #' 
 #' @param x an object of class 'gnrflex'.
 #' @param digits the number of significant figures to use for printing.
 #' @param ... currently not used.
+#' 
+#' @return \code{print.gnrflex} has no return value and only prints a brief overview of elements contained in an object of class 'gnrflex' as described in the description.
 #' 
 #' @usage
 #' \method{print}{gnrflex}(x, digits = max(3L, getOption("digits") - 3L), ...)
@@ -175,11 +182,13 @@ print.gnrflex <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
 }
 
 #' Printing second stage estimates
-#' @description Print estimates of the fixed input elasticities and productivity from \code{\link[gnrprod]{gnriv}}
+#' @description Print estimates of the fixed input elasticities, productivity, objective function value, and convergence status from \code{\link[gnrprod]{gnriv}}.
 #' 
 #' @param x an object of class 'gnriv'.
 #' @param digits the number of significant figures to use for printing.
 #' @param ... currently not used.
+#' 
+#' @return \code{print.gnriv} has no return value and only prints a brief overview of elements contained in an object of class 'gnriv' as described in the description.
 #' 
 #' @usage 
 #' \method{print}{gnriv}(x, digits = max(3L, getOption("digits") - 3L), ...)

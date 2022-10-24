@@ -13,6 +13,9 @@
 
 \item{...}{currently not used.}
 }
+\value{
+\code{print.gnr} has no return value and only prints the elements contained in an object of class 'summary.gnr' as described in the description.
+}
 \description{
 Print a summary of the gross output function estimation routine from \code{\link[gnrprod]{gnrprod}}: names of output and inputs, summary statistics of the estimated productivity, the function estimates and standard errors if applicable, and convergence information.
 }
