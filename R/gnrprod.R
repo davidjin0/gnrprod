@@ -41,7 +41,8 @@
 #'  \item{\code{optim_method}}{: the method for optimization. Defaults to 'BFGS'. See \code{\link[stats]{optim}} for a listing of available methods.}
 #'  \item{\code{optim_info}}{: the returned list of the \code{\link[stats]{optim}} function estimating the coefficients of the constant of integration. See Gandhi, Navarro, and Rivers (2020, p. 1994, equation (21)).}
 #'  \item{\code{optim_control}}{: the list of control parameters passed to \code{\link[stats]{optim}}.}
-#'  \item{\code{degree}}{: degree of Markov process for persistent productivity.}
+#'  \item{\code{degree_w}}{: degree of Markov process for persistent productivity.}
+#'  \item{\code{degree_tau}}{: degree of expansion for constant of integration.}
 #' }
 #' 
 #' \code{call}: the function call.
@@ -168,7 +169,8 @@ gnrprod <- function(output, fixed, flex, share, in_price = NULL,
   ss_return <- list("optim_method" = gnr_iv$control$method,
                     "optim_info" = gnr_iv$optim_info,
                     "optim_control" = gnr_iv$control$optim_control,
-                    "degree" = gnr_iv$control$degree)
+                    "degree_constant" = gnr_iv$control$degree_tau,
+                    "degree_productivity" = gnr_iv$control$degree_w)
 
   return_average_elas <- apply(elas, MARGIN = 2, FUN = mean)
   

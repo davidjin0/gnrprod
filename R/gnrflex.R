@@ -36,6 +36,7 @@
 #' \itemize{
 #'  \item{\code{input}}{: a numeric matrix (S3: \code{\link[stats]{poly}}) of the polynomial expansion of all inputs.}
 #'  \item{\code{input_degree}}{: a numeric matrix corresponding to \code{input} denoting each vector's degree.}
+#'  \item{\code{all_input}}{: a numeric matrix of the inputs without polynomial expansion.}
 #'  \item{\code{big_Y}}{: a numeric vector of persistent productivity minus the constant of integration. See Gandhi, Navarro, and Rivers (2020, p. 2991, equation (16)).}
 #'  \item{\code{D_coef}}{: a numeric vector equaling \code{coef} divided by an estimate of the constant.}
 #'  \item{\code{id}}{: a numeric vector of the firm ids.}
@@ -127,6 +128,7 @@ gnrflex <- function(output, fixed, flex, share, id, time, data, control) {
 
   fs_arg <- list("input" = poly_input,
                  "input_degree" = input_degrees,
+                 "all_input" = all_input,
                  "big_Y" = big_Y,
                  "D_coef" = gamma[-1, ] / gamma_denom[-1, ],
                  "id" = id,

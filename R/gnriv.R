@@ -26,7 +26,7 @@
 #' industry_311_flex <- gnrflex(output = "RGO", fixed = c("L", "K"),
 #'                              flex = "RI", share = "share", id = "id",
 #'                              time = "year", data = data,
-#'                              control = list(degree = 2, maxit = 200))
+#'                              control = list(degree_w = 2, maxit = 200))
 #' 
 #' industry_311_fixed <- gnriv(industry_311_flex,
 #'                             control = list(trace = 1))
@@ -46,36 +46,45 @@ gnriv <- function(object, control, ...) {
   if (!missing(control)) {
     control <- as.list(control)
     ctrl[names(control)] <- control
-    
-    if (length(ctrl) == 2) {
+    if (length(ctrl) == 3) {
       optim.control <- NULL
     } else {
-      optim.control <- ctrl[3:length(ctrl)]
+      optim.control <- ctrl[4:length(ctrl)]
     }
   } else {
     optim.control <- NULL
   }
   
-  degree <- ctrl[[1]]
-  method <- ctrl[[2]]
+  degree_w <- ctrl[[1]]
+  degree_tau <- ctrl[[2]]
+  method <- ctrl[[3]]
   
-  all_input <- object$arg$input
-  input_degree <- object$arg$input_degree
-
+  if (degree_w <= 0) {
+    degree_w <- object$control$degree
+  }
+  
+  if (degree_tau == object$control$degree) {
+    all_input <- object$arg$input
+    orig_input <- all_input
+    input_degree <- object$arg$input_degree
+    orig_input_degree <- input_degree
+  } else {
+    all_input <- object$arg$all_input
+    all_input <- stats::poly(all_input, degree = degree_tau, raw = TRUE)
+    orig_input <- object$arg$input
+    input_degree <- sapply(colnames(all_input), FUN = function(x) {
+      a <- base::strsplit(x, split = "[.]")[[1]]
+    })
+    input_degree <- apply(input_degree, 2, as.numeric)
+    orig_input_degree <- object$arg$input_degree
+  }
+  
   pred <- sapply(1:ncol(input_degree), FUN = function(i) {
     if (input_degree[nrow(input_degree), i] == 0) {
       return(all_input[, i, drop = FALSE])
     }
   })
   pred <- do.call(cbind, pred)
-
-  flex <- sapply(1:ncol(input_degree), FUN = function(i) {
-    if ((sum(input_degree[, i]) >= 1) &&
-        input_degree[nrow(input_degree), i] == 1) {
-      return(all_input[, i, drop = FALSE])
-    }
-  })
-  flex <- do.call(cbind, flex)
 
   id <- object$arg$id
   time <- object$arg$time
@@ -105,7 +114,7 @@ gnriv <- function(object, control, ...) {
   constant_gmm <- stats::optim(par = coefficients, fn = constant_moments,
                                data = fixed_base, big_Y_base = big_Y_base,
                                big_Y_lag = big_Y_lag, lag_data = fixed_lag,
-                               degree = degree, method = method,
+                               degree = degree_w, method = method,
                                control = optim.control, ...)
 
   opt_ctrl <- list(trace = 0, fnscale = 1,
@@ -119,45 +128,54 @@ gnriv <- function(object, control, ...) {
   opt_ctrl[names(optim.control)] <- optim.control
 
   C_coef <- constant_gmm$par
-
-  elasticities <- lapply(1:(nrow(input_degree) - 1), FUN = function(i) {
+  constants <- lapply(1:(nrow(input_degree) - 1), FUN = function(i) {
     new_in_deg <- input_degree
     new_in_deg[i, ] <- ifelse(new_in_deg[i, ] > 0,
                               new_in_deg[i, ] - 1,
                               new_in_deg[i, ])
-
+    
     new_C_deg <- new_in_deg[, new_in_deg[nrow(input_degree), ] == 0]
+    C_match <- apply(new_C_deg, MARGIN = 2, FUN = match_gnr, degree_vec =
+                       input_degree)
+    
+    deriv_C <- all_input[, C_match]
+    deriv_C[is.na(deriv_C)] <- 1
+    C <- deriv_C %*%
+      t(t(input_degree[i, input_degree[nrow(input_degree), ] == 0]) * C_coef)
+  })
+  
+  elas_noC <- lapply(1:(nrow(orig_input_degree) - 1), FUN = function(i) {
+    new_in_deg <- orig_input_degree
+    new_in_deg[i, ] <- ifelse(new_in_deg[i, ] > 0,
+                              new_in_deg[i, ] - 1,
+                              new_in_deg[i, ])
 
     new_in_deg[nrow(new_in_deg), ] <- new_in_deg[nrow(new_in_deg), ] + 1
 
     in_match <- apply(new_in_deg, MARGIN = 2, FUN = match_gnr, degree_vec =
-                        input_degree)
-    C_match <- apply(new_C_deg, MARGIN = 2, FUN = match_gnr, degree_vec =
-                       input_degree)
+                        orig_input_degree)
 
-    deriv_input <- all_input[, in_match]
+    deriv_input <- orig_input[, in_match]
     deriv_input[is.na(deriv_input)] <- 0
-
-    deriv_C <- all_input[, C_match]
-    deriv_C[is.na(deriv_C)] <- 1
-
-    C <- deriv_C %*%
-      t(t(input_degree[i, input_degree[nrow(input_degree), ] == 0]) * C_coef)
-
-    elas <- deriv_input %*% t(t(input_degree[i, ]) * (object$arg$D_coef)) + C
+    elas <- deriv_input %*% t(t(orig_input_degree[i, ]) * (object$arg$D_coef))
+  })
+  elas = lapply(1:length(elas_noC), FUN = function(x) {
+    elas_noC[[x]] + constants[[x]]
   })
 
   logomega <- big_Y - (as.matrix(pred) %*% C_coef)
   omega <- exp(logomega)
   productivity <- as.matrix(exp(logomega + errors))
 
-  elasticities <- do.call(cbind, elasticities)
+  elasticities <- do.call(cbind, elas)
   colnames(elasticities) <- object$arg$fixed_names
   colnames(productivity) <- "productivity"
   ss_return <- list("fixed_elas" = elasticities,
                     "productivity" = productivity,
                     "optim_info" = constant_gmm,
-                    "control" = list("degree" = degree, "method" = method,
+                    "control" = list("degree_w" = degree_w,
+                                     "degree_tau" = degree_tau,
+                                     "method" = method,
                                      "optim_control" = opt_ctrl))
   class(ss_return) <- "gnriv"
   return(ss_return)
