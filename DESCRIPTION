@@ -6,8 +6,8 @@ Authors@R:
            family = "Jin",
            role = c("aut", "cre"),
            email = "jindavid@sas.upenn.edu")
-Author: David Jin [aut, cre]
-Maintainer: David Jin <jindavid@sas.upenn.edu>
+Author: David J. Jin [aut, cre]
+Maintainer: David J. Jin <jindavid@sas.upenn.edu>
 Description: Estimation of gross output production functions and productivity in the presence of numerous fixed (nonflexible) and a single flexible input using the nonparametric identification strategy specified in Gandhi, Navarro, and Rivers (2020) <doi:10.1086/707736>. Monte Carlo evidence from the paper demonstrates high performance in estimating production function elasticities.
 License: GPL-3
 Encoding: UTF-8
