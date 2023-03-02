@@ -1,3 +1,6 @@
+# gnrprod 1.1.0
+* Implemented an option to change the degree of the constant expansion in the second stage
+
 # gnrprod 1.0.0
 * First major release of 'gnrprod'
 * Submitted to CRAN

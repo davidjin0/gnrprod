@@ -37,7 +37,7 @@ data <- colombian
 industry_311_flex <- gnrflex(output = "RGO", fixed = c("L", "K"),
                              flex = "RI", share = "share", id = "id",
                              time = "year", data = data,
-                             control = list(degree = 2, maxit = 200))
+                             control = list(degree_w = 2, maxit = 200))
 
 industry_311_fixed <- gnriv(industry_311_flex,
                             control = list(trace = 1))

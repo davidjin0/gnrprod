@@ -4,10 +4,12 @@
 \alias{gnriv.control}
 \title{Control parameters in \code{gnriv}}
 \usage{
-gnriv.control(degree = 3, method = "BFGS", ...)
+gnriv.control(degree_w = -1, degree_tau = 3, method = "BFGS", ...)
 }
 \arguments{
-\item{degree}{degree of Markov process for persistent productivity. Defaults to 3.}
+\item{degree_w}{degree of Markov process for persistent productivity. Defaults to 3.}
+
+\item{degree_tau}{degree of expansion for constant of integration. Defaults to the degree of first stage.}
 
 \item{method}{the method of optimization passed to \code{\link[stats]{optim}}. Defaults to "BFGS." See \code{\link[stats]{optim}} under 'Details' for listing of available methods.}
 

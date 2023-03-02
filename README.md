@@ -11,7 +11,7 @@ only one flexible input.
 
 ## Installation
 
-To install the latest development version of  from Github, run the
+To install the latest development version of from Github, run the
 following from R:
 
 ``` r

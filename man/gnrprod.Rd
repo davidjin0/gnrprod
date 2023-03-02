@@ -56,7 +56,8 @@ a list of class 'gnr' with five elements:
 \item{\code{optim_method}}{: the method for optimization. Defaults to 'BFGS'. See \code{\link[stats]{optim}} for a listing of available methods.}
 \item{\code{optim_info}}{: the returned list of the \code{\link[stats]{optim}} function estimating the coefficients of the constant of integration. See Gandhi, Navarro, and Rivers (2020, p. 1994, equation (21)).}
 \item{\code{optim_control}}{: the list of control parameters passed to \code{\link[stats]{optim}}.}
-\item{\code{degree}}{: degree of Markov process for persistent productivity.}
+\item{\code{degree_w}}{: degree of Markov process for persistent productivity.}
+\item{\code{degree_tau}}{: degree of expansion for constant of integration.}
 }
 
 \code{call}: the function call.
