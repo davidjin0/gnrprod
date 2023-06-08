@@ -59,8 +59,8 @@ gnriv <- function(object, control, ...) {
   degree_tau <- ctrl[[2]]
   method <- ctrl[[3]]
   
-  if (degree_w <= 0) {
-    degree_w <- object$control$degree
+  if (degree_tau <= 0) {
+    degree_tau <- object$control$degree
   }
   
   if (degree_tau == object$control$degree) {
@@ -185,12 +185,16 @@ constant_moments <- function(C_kl, data, big_Y_base, big_Y_lag, lag_data,
                              degree) {
   w <- big_Y_base - (data %*% C_kl)
   w_1 <- big_Y_lag - (lag_data %*% C_kl)
-
-  poly <- sapply(2:degree, FUN = function(i) {
-    `^`(w_1, i)
-  })
-
-  markov <- cbind(w_1, poly)
+  
+  if (degree < 2) {
+    markov <- w_1
+  } else {
+    poly <- sapply(2:degree, FUN = function(i) {
+      `^`(w_1, i)
+    })
+    
+    markov <- cbind(w_1, poly)
+  }
 
   reg <- stats::lm(w ~ markov)
   csi <- w - reg$fitted.values

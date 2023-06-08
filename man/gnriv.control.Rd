@@ -4,7 +4,7 @@
 \alias{gnriv.control}
 \title{Control parameters in \code{gnriv}}
 \usage{
-gnriv.control(degree_w = -1, degree_tau = 3, method = "BFGS", ...)
+gnriv.control(degree_w = 3, degree_tau = -1, method = "BFGS", ...)
 }
 \arguments{
 \item{degree_w}{degree of Markov process for persistent productivity. Defaults to 3.}

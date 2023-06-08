@@ -7,11 +7,11 @@
 #' @param ... additional optional control parameters passed to \code{\link[stats]{optim}}. See \code{\link[stats]{optim}} for available parameters.
 #' @return a list containing \code{degree} and \code{method} and any additional parameters in \code{...}. 
 #' 
-#' @usage gnriv.control(degree_w = -1, degree_tau = 3, method = "BFGS", ...)
+#' @usage gnriv.control(degree_w = 3, degree_tau = -1, method = "BFGS", ...)
 #' 
 #' @export
 
-gnriv.control <- function(degree_w = -1, degree_tau = 3, method = "BFGS", ...) {
+gnriv.control <- function(degree_w = 3, degree_tau = -1, method = "BFGS", ...) {
   return(list(degree_w = degree_w, degree_tau = degree_tau,
               method = method, ...))
 }

@@ -1,3 +1,7 @@
+# gnrprod 1.1.1
+* Fixed a bug that incorrectly sets the degree of the Markov process in the second
+stage
+
 # gnrprod 1.1.0
 * Implemented an option to change the degree of the constant expansion in the second stage
 
